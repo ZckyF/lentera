@@ -1,0 +1,62 @@
+@startuml ERD_Class_Style
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam roundCorner 8
+skinparam class {
+  BackgroundColor #E8F4FD
+  BorderColor #2E86AB
+  ArrowColor #2E86AB
+}
+
+title ERD - Sistem AI Peraturan Akademik Polnes
+
+class users << (A,#E8F4FD) Aktor >> {
+  __ Primary Key __
+  + id : PK
+  __ Atribut __
+  + identifier : String <<UK>>
+  + name : String
+  + role : Enum(admin, mahasiswa, dosen)
+  + password : String
+  + status : Enum(pending, active)
+}
+
+class documents << (A,#E8F4FD) Gudang Aturan >> {
+  __ Primary Key __
+  + id : PK
+  __ Atribut __
+  + title : String
+  + year : Integer
+  + file_path : String
+  + content_raw : LongText
+  + is_active : Boolean
+}
+
+class chat_sessions << (A,#E8F4FD) Riwayat Obrolan >> {
+  __ Primary Key __
+  + id : PK
+  __ Atribut __
+  + user_id : FK --> users.id
+  + title : String
+  + created_at : Timestamp
+}
+
+class chat_messages << (A,#E8F4FD) Isi Pesan >> {
+  __ Primary Key __
+  + id : PK
+  __ Atribut __
+  + session_id : FK --> chat_sessions.id
+  + sender : Enum(user, ai)
+  + message : LongText
+  + doc_reference : String [opsional]
+  + created_at : Timestamp
+}
+
+' Kardinalitas: 1 user punya banyak chat_sessions
+users "1" -- "0..*" chat_sessions : user_id
+
+' Kardinalitas: 1 chat_session punya banyak chat_messages
+chat_sessions "1" -- "0..*" chat_messages : session_id
+
+@enduml

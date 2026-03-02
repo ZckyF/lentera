@@ -1,0 +1,69 @@
+@startuml ERD_Sistem_AI_Peraturan_Akademik
+
+!theme plain
+skinparam linetype ortho
+skinparam backgroundColor #FEFEFE
+skinparam roundCorner 10
+skinparam defaultFontSize 11
+skinparam class {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+}
+
+title ERD - Sistem AI Peraturan Akademik Polnes
+
+class "users" as users {
+  **id** : PK
+  --
+  identifier : String <<UK>>
+  nik : String <<UK>>
+  name : String
+  role : Enum(admin, mahasiswa, dosen,staff)
+  password : String
+  status : Enum(pending, active, inactive)
+}
+
+class "documents" as documents {
+  **id** : PK
+  --
+  title : String
+  year : Integer
+  file_path : String
+  content_raw : LongText
+  is_active : Boolean
+  uploaded_by : FK
+}
+
+class "chat_sessions" as chat_sessions {
+  **id** : PK
+  --
+  user_id : FK
+  title : String
+  created_at : Timestamp
+}
+
+class "chat_messages" as chat_messages {
+  **id** : PK
+  --
+  session_id : FK
+  sender : Enum(user, ai)
+  message : LongText
+  doc_reference : String
+  created_at : Timestamp
+}
+
+users "1" ||--o{ "0..*" chat_sessions : user_id
+chat_sessions "1" ||--o{ "0..*" chat_messages : session_id
+users "1" ||--o{ "0..*" documents : uploaded_by
+
+' note right of users
+'   identifier = NIM atau NIP (unique)
+'   status = pending → harus ganti password dulu
+' end note
+
+' note right of documents
+'   is_active = true → hanya ini
+'   yang dipakai AI untuk jawab
+' end note
+
+@enduml

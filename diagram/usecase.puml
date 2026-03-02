@@ -1,0 +1,85 @@
+@startuml UC_Sistem_AI_Peraturan_Akademik
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam roundCorner 8
+skinparam useCase {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+}
+skinparam actor {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+}
+
+left to right direction
+
+title Use Case Diagram - Sistem AI Peraturan Akademik Polnes
+
+' --- Aktor ---
+actor "Mahasiswa" as mhs
+actor "Dosen" as dosen
+actor "Staff" as staff
+actor "Admin" as admin
+actor "AI" as ai
+
+' --- Use Cases ---
+rectangle "Sistem AI Peraturan Akademik" {
+
+  usecase "UC-01: Login &\nAktivasi Akun" as UC01
+  usecase "UC-02: Tanya Jawab Aturan\n(Chatting)" as UC02
+  usecase "UC-03: Kelola Riwayat\n(History)" as UC03
+  usecase "UC-04: Manajemen Knowledge Base" as UC04
+
+  ' --- Relasi Aktor - Use Case ---
+  ' Mahasiswa, Dosen, Staff → UC-01, UC-02, UC-03
+  mhs --> UC01
+  mhs --> UC02
+  mhs --> UC03
+  dosen --> UC01
+  dosen --> UC02
+  dosen --> UC03
+  staff --> UC01
+  staff --> UC02
+  staff --> UC03
+
+  ' Admin → UC-04 (dan biasanya juga bisa login)
+  admin --> UC01
+  admin --> UC04
+
+  ' AI sebagai aktor sekunder (melayani UC-02)
+  UC02 --> ai : «include»\nbalas via RAG + Reverb
+}
+
+' --- Include/Extend jika perlu ---
+' UC01 bisa include "Cek status pending" dan "Ganti password"
+usecase "Ganti Password\n(status → active)" as GP
+UC01 ..> GP : «include»
+
+note right of UC01
+  Alur: NIM/NIP + Password default
+  (NIK) → cek pending
+  → redirect Ganti Password
+  → status = active
+end note
+
+note right of UC02
+  Alur: User kirim pesan → AI ambil
+  data dari documents (RAG)
+  → balas real-time (Reverb)
+  → simpan ke chat_messages
+end note
+
+note bottom of UC03
+  Alur: Daftar chat_sessions
+  di sidebar → klik judul
+  → chat lama dimuat
+end note
+
+note right of UC04
+  Alur: Upload PDF → ekstrak
+  ke content_raw → set
+  is_active untuk AI
+end note
+
+@enduml
