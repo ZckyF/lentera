@@ -29,7 +29,8 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'role' => fake()->randomElement(['admin', 'mahasiswa', 'dosen', 'staff']),
             'password' => static::$password ??= Hash::make('password'),
-            'status' => fake()->randomElement(['pending', 'active', 'inactive'])
+            'status' => fake()->randomElement(['pending', 'active', 'inactive']),
+            'remember_token' => Str::random(10),
         ];
     }
 

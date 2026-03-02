@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('role', ['admin', 'mahasiswa', 'dosen', 'staff']);
             $table->string('password');
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
+            $table->rememberToken();
             $table->timestamps();
         });
 
