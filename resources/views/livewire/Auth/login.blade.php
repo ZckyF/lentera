@@ -1,6 +1,6 @@
 <div class="card shadow-sm border-0">
     <div class="card-body p-4">
-        <h5 class="card-title mb-3 text-center fw-semibold text-primary">
+        <h5 class="card-title mb-3 text-center fw-semibold">
             Masuk ke Akun Anda
         </h5>
 
