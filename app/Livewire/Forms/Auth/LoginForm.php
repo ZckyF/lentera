@@ -30,7 +30,7 @@ class LoginForm extends Form
         $this->validate();
 
         if (! Auth::attempt(['identifier' => $this->identifier, 'password' => $this->password], true)) {
-            $this->addError('identifier', __('These credentials do not match our records.'));
+            $this->addError('identifier', "Identitas atau password salah.");
 
             return false;
         }

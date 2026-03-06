@@ -1,13 +1,124 @@
-$primary:    #1A237E;
+$primary:    #385D8D;
 $secondary:  #FFC107;
 $success:    #00897B;
 $body-bg:    #F4F7F9;
 $body-color: #2C3E50;
-
 $font-family-sans-serif: 'Poppins', sans-serif;
+
+@import "bootstrap/scss/bootstrap";
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import 'bootstrap-icons/font/bootstrap-icons.css';
-@import "bootstrap/scss/bootstrap";
+
+.admin-layout {
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 250px;
+    overflow-y: auto;
+    transition: width 160ms ease, transform 160ms ease;
+    z-index: 1035;
+}
+
+.admin-main {
+    margin-left: 250px;
+    transition: margin-left 160ms ease;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-footer {
+    margin-top: auto;
+}
+
+.admin-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.75rem;
+}
+
+.admin-sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.admin-sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.admin-sidebar .nav-link i {
+    font-size: 1.1rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar {
+    width: 70px;
+}
+
+.admin-layout.sidebar-collapsed .admin-main {
+    margin-left: 70px;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar .sidebar-text,
+.admin-layout.sidebar-collapsed .admin-sidebar .sidebar-brand-text {
+    display: none;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar .nav-link {
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar .nav-link i {
+    width: auto;
+}
+
+.admin-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1034;
+}
+
+@media (max-width: 767.98px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+        width: 250px;
+    }
+
+    .admin-main {
+        margin-left: 0;
+    }
+
+    .admin-layout.sidebar-mobile-open .admin-sidebar {
+        transform: translateX(0);
+    }
+
+    .admin-layout.sidebar-mobile-open .admin-sidebar-backdrop {
+        display: block;
+    }
+}
+
+.admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.admin-font {
+    font-family: "Segoe UI", Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
 .bubble-user {
     background-color: $primary;

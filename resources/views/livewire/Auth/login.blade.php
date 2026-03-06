@@ -1,6 +1,6 @@
 <div class="card shadow-sm border-0">
     <div class="card-body p-4">
-        <h5 class="card-title mb-3 text-center fw-semibold" style="color: #1A237E;">
+        <h5 class="card-title mb-3 text-center fw-semibold text-primary">
             Masuk ke Akun Anda
         </h5>
 
@@ -33,7 +33,7 @@
                 @enderror
             </div>
 
-            <button type="submit" class="btn btn-primary w-100" style="background-color: #1A237E; border: none;" wire:loading.attr="disabled">
+            <button type="submit" class="btn btn-primary w-100 bg-primary" style="border: none;" wire:loading.attr="disabled">
                 <span wire:loading.remove>Masuk</span>       
                 <span wire:loading>
                     <div class="spinner-border spinner-border-sm" role="status">
