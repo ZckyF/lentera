@@ -22,15 +22,37 @@ function initAdminUI() {
     const backdrop = document.getElementById('sidebarBackdrop');
     const themeToggle = document.getElementById('themeToggle');
 
+    const syncSidebarState = () => {
+        const isMobile = window.matchMedia('(max-width: 767.98px)').matches;
+        
+        if (isMobile) {
+            layout.classList.remove('sidebar-collapsed');
+        } else {
+            const sidebarSavedStatus = localStorage.getItem('lentera_sidebar_collapsed');
+            if (sidebarSavedStatus === 'true') {
+                layout.classList.add('sidebar-collapsed');
+            } else {
+                layout.classList.remove('sidebar-collapsed');
+            }
+            layout.classList.remove('sidebar-mobile-open');
+        }
+    };
+    syncSidebarState();
+
+    window.matchMedia('(max-width: 767.98px)').addEventListener('change', syncSidebarState);
+
     const savedTheme = localStorage.getItem('lentera_theme') || 'light';
     applyTheme(savedTheme);
 
     const handleSidebar = () => {
-        const isMobile = window.matchMedia('(max-width: 767.98px)').matches;
-        if (isMobile) {
+        const isNowMobile = window.matchMedia('(max-width: 767.98px)').matches;
+        
+        if (isNowMobile) {
             layout.classList.toggle('sidebar-mobile-open');
         } else {
             layout.classList.toggle('sidebar-collapsed');
+            const isCollapsed = layout.classList.contains('sidebar-collapsed');
+            localStorage.setItem('lentera_sidebar_collapsed', isCollapsed);
         }
     };
 
@@ -41,16 +63,14 @@ function initAdminUI() {
         applyTheme(next);
     };
 
-    // Bersihkan event lama (jika ada) dan pasang yang baru
     sidebarToggle?.removeEventListener('click', handleSidebar);
     sidebarToggle?.addEventListener('click', handleSidebar);
 
     themeToggle?.removeEventListener('click', handleTheme);
     themeToggle?.addEventListener('click', handleTheme);
 
-    backdrop?.removeEventListener('click', handleSidebar); 
+    backdrop?.removeEventListener('click', () => layout.classList.remove('sidebar-mobile-open')); 
     backdrop?.addEventListener('click', () => layout.classList.remove('sidebar-mobile-open'));
 }
 
-// Hanya gunakan livewire:navigated karena ini mencakup load pertama dan navigasi selanjutnya
 document.addEventListener('livewire:navigated', initAdminUI);

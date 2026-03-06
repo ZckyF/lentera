@@ -98,7 +98,8 @@ $font-family-sans-serif: 'Poppins', sans-serif;
     }
 
     .admin-main {
-        margin-left: 0;
+        margin-left: 0 !important;
+        width: 100%;
     }
 
     .admin-layout.sidebar-mobile-open .admin-sidebar {

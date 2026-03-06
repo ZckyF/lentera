@@ -16,7 +16,12 @@
 
             <aside class="admin-sidebar bg-primary text-white p-3">
                 <a href="{{ route('dashboard') }}" wire:navigate class="d-flex align-items-center gap-2 mb-3 text-white text-decoration-none">
-                    <i class="bi bi-lamp-fill fs-5"></i>
+                    <img 
+                        src="{{ asset('storage/white-polnes-logo.png') }}" 
+                        alt="Logo Polnes" 
+                        style="width: 32px; height: auto;"
+                        class="sidebar-brand-icon"
+                    >
                     <span class="sidebar-brand-text fw-semibold">LENTERA</span>
                 </a>
 

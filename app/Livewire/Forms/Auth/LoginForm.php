@@ -30,7 +30,7 @@ class LoginForm extends Form
         $this->validate();
 
         if (! Auth::attempt(['identifier' => $this->identifier, 'password' => $this->password], true)) {
-            $this->addError('identifier', "Identitas atau password salah.");
+            $this->addError('identifier', "Identitas atau Kata sandi salah.");
 
             return false;
         }
