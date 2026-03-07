@@ -5,8 +5,12 @@ namespace App\Livewire\Auth;
 use App\Livewire\Forms\Auth\ActivateForm;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
+#[Layout('layouts.auth')]
+#[Title('Login')]
 class Activate extends Component
 {
     public string $identifier = '';
@@ -65,8 +69,7 @@ class Activate extends Component
 
     public function render()
     {
-        return view('livewire.auth.activate')
-            ->title(__('Account Activation'));
+        return view('livewire.auth.activate');
     }
 }
 

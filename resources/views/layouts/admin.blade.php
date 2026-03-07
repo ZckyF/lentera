@@ -83,14 +83,14 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
                                         <a class="dropdown-item" href="#" onclick="event.preventDefault();">
-                                            <i class="bi bi-person me-2"></i>Profile
+                                            <i class="bi bi-person me-2"></i>Profil
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
                                             <i class="bi bi-box-arrow-right"></i>
-                                            <span>Logout</span>
+                                            <span>Keluar</span>
                                         </button>
                                     </li>
                                 </ul>
@@ -102,26 +102,28 @@
                 <div class="container-fluid py-4">
                     {{ $slot }}
                 </div>
-
-                <footer class="admin-footer py-3 border-top bg-body">
-                    <div class="container text-center small text-muted">
-                        © 2026 LENTERA - Politeknik Negeri Samarinda. All Rights Reserved.
-                    </div>
-                </footer>
             </main>
+            
+            <footer class="admin-footer py-3 border-top bg-body">
+                <div class="container text-center small text-muted">
+                    © 2026 LENTERA - Politeknik Negeri Samarinda. All Rights Reserved.
+                </div>
+            </footer>
         </div>
 
         <x-confirmation-modal id="logoutModal" title="Keluar dari LENTERA" type="danger">
-            Apakah Anda yakin ingin logout saat ini ?
+            Apakah Anda yakin ingin keluar saat ini ?
             <x-slot:footer>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn btn-danger px-4">Logout</button>
+                    <button type="submit" class="btn btn-danger px-4">Keluar</button>
                 </form>
             </x-slot:footer>
         </x-confirmation-modal>
 
         @livewireScripts
+
+        @stack('scripts')
     </body>
 </html>
 
