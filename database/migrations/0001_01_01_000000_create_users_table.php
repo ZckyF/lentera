@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('sessions', function (Blueprint $table) {
