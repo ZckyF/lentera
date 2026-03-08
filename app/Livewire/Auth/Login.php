@@ -19,18 +19,20 @@ class Login extends Component
         if (! $this->form->store()) {
             return;
         }
-
+    
         $user = Auth::user();
-
+    
         if ($user?->status === 'pending') {
             session(['pending_identifier' => $user->identifier]);
-
             $this->redirect('/activate', navigate: true);
-
             return;
         }
-
-        $this->redirect('/dashboard', navigate: true);
+    
+        if ($user?->role === 'admin') {
+            $this->redirect('/dashboard', navigate: true);
+        } else {
+            $this->redirect('/chat', navigate: true);
+        }
     }
 
     public function render()

@@ -15,16 +15,21 @@ Route::redirect('/', '/login');
 // Route::get('/activate', Activate::class)->name('activate');
 
 Route::middleware(['auth', 'ensure.active'])->group(function () {
-    Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
+    
+    Route::middleware(['is.role:admin'])->group(function () {
+        Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
+        Route::get('/admin/pengguna', AdminUsersIndex::class)->name('admin.users');
+        Route::get('/admin/dokumen', AdminDocumentsIndex::class)->name('admin.documents');
+    });
 
-    Route::get('/admin/pengguna', AdminUsersIndex::class)->name('admin.users');
-    Route::get('/admin/dokumen', AdminDocumentsIndex::class)->name('admin.documents');
+    Route::middleware(['is.role:mahasiswa,dosen,staff'])->group(function () {
+        // Route::get('/chat', ChatIndex::class)->name('chat');
+    });
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect()->route('login');
     })->name('logout');
 });
