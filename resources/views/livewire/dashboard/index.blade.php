@@ -67,16 +67,16 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     document.addEventListener('livewire:navigated', function () {
-        
         function initCharts() {
             const elA = document.querySelector("#chart-interaction");
             const elB = document.querySelector("#chart-distribution");
 
-            // Hancurkan instance lama jika ada agar tidak duplikat
+            if (!elA && !elB) return;
+
+            // Hancurkan instance lama agar tidak duplikat/stack
             if (window.chartInteraction) window.chartInteraction.destroy();
             if (window.chartDistribution) window.chartDistribution.destroy();
 
-            // Deteksi Tema
             const storedTheme = localStorage.getItem('lentera_theme');
             const isDark = (storedTheme === 'dark') 
                 || (!storedTheme && document.documentElement.getAttribute('data-bs-theme') === 'dark');
@@ -133,7 +133,10 @@
             }
         }
 
-        initCharts();
+        setTimeout(() => {
+            initCharts();
+        }, 50); 
+
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'data-bs-theme') {

@@ -25,7 +25,6 @@ class UserFactory extends Factory
     {
         return [
             'identifier' => strtoupper(fake()->unique()->bothify('USR####')),
-            'nik' => fake()->unique()->numerify('################'),
             'name' => fake()->name(),
             'role' => fake()->randomElement(['admin', 'mahasiswa', 'dosen', 'staff']),
             'password' => static::$password ??= Hash::make('password'),

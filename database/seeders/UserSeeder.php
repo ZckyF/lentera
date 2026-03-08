@@ -16,7 +16,6 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['identifier' => 'ADMIN001'],
             [
-                'nik' => '0000000000000001',
                 'name' => 'Super Admin',
                 'role' => 'admin',
                 'status' => 'active',
@@ -26,7 +25,6 @@ class UserSeeder extends Seeder
 
         User::factory()->create([
             'identifier' => '246661058',
-            'nik' => '64720319999888',
             'name' => 'M Ramadhani',
             'role' => 'mahasiswa'
         ]);
