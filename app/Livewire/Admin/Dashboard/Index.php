@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Dashboard;
+namespace App\Livewire\Admin\Dashboard;
 
 use App\Models\Document;
 use App\Models\User;
@@ -23,7 +23,7 @@ class Index extends Component
             ->groupBy('year')
             ->get();
         
-        return view('livewire.dashboard.index',[
+        return view('livewire.admin.dashboard.index',[
             'totalUsers' => User::count(),
             'totalDocuments' => Document::count(),
             'days' => $days->map(fn($d) => date('d M', strtotime($d))),

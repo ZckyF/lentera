@@ -4,7 +4,7 @@ use App\Livewire\Auth\Activate;
 use App\Livewire\Auth\Login;
 use App\Livewire\Admin\Documents\Index as AdminDocumentsIndex;
 use App\Livewire\Admin\Users\Index as AdminUsersIndex;
-use App\Livewire\Dashboard\Index as DashboardIndex;
+use App\Livewire\Admin\Dashboard\Index as DashboardIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
