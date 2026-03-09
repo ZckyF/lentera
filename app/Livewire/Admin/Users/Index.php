@@ -21,7 +21,19 @@ class Index extends Component
 
     public $isEditing = false;
     public $isAdding = false;
+    public bool $isViewing = false;
+    public bool $showHistory = false;
     public $userIdBeingDeleted = null;
+    public $userIdBeingRestored = null;
+
+    public function view($id)
+    {
+        $this->cancel();
+        $user = User::withTrashed()->findOrFail($id);
+        
+        $this->form->setUser($user);
+        $this->isViewing = true;
+    }
 
     public function create()
     {
@@ -34,6 +46,24 @@ class Index extends Component
         $this->form->store();
         $this->isAdding = false;
         session()->flash('message', 'Pengguna berhasil ditambahkan.');
+    }
+
+    public function confirmRestore($id)
+    {
+        $this->userIdBeingRestored = $id;
+
+        $this->dispatch('show-restore-modal');
+    }
+
+    public function restore()
+    {
+        if ($this->userIdBeingRestored) {
+            $user = User::withTrashed()->findOrFail($this->userIdBeingRestored);
+            $user->restore();
+            $this->userIdBeingRestored = null;
+            $this->dispatch('hide-restore-modal');   
+            session()->flash('message', 'Pengguna "' . $user->name . '" berhasil dipulihkan.');
+        }
     }
 
     public function edit(User $user)
@@ -76,13 +106,27 @@ class Index extends Component
         $this->form->reset();
         $this->isEditing = false;
         $this->isAdding = false;
+        $this->isViewing = false;
         $this->resetErrorBag();
+    }
+
+    public function toggleHistory()
+    {
+        $this->showHistory = !$this->showHistory;
+        $this->cancel();
+        $this->resetPage();
     }
     
     public function render()
     {
+        $query = $this->showHistory 
+        ? User::onlyTrashed() 
+        : User::query();
+
+        $users = $query->where('id','!=',auth()->user()->id)->latest()->paginate(10);
+
         return view('livewire.admin.users.index',[
-            'users' => User::where('id','!=', auth()->user()->id)->latest()->paginate(10)
+            'users' => $users
         ]);
     }
 }

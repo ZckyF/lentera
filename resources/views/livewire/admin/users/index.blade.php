@@ -13,68 +13,65 @@
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <h5 class="mb-1 fw-semibold">
-                        <i class="bi bi-people me-2 text-primary"></i>Pengguna
+                        <i class="bi {{ $showHistory ? 'bi-archive' : 'bi-people' }} me-2 text-primary"></i>
+                        {{ $showHistory ? 'Arsip Pengguna' : 'Pengguna Aktif' }}
                     </h5>
-                    <div class="text-muted small">Manajemen data civitas dan hak akses sistem Lentera.</div>
+                    <div class="text-muted small">
+                        {{ $showHistory ? 'Daftar akun yang telah dinonaktifkan/dihapus sementara.' : 'Manajemen data civitas Lentera.' }}
+                    </div>
                 </div>
-                <button wire:click="create" class="btn btn-primary px-4 shadow-sm" @if($isAdding || $isEditing) disabled @endif>
-                    <i class="bi bi-plus-lg me-2"></i>Tambah
-                </button>
+                <div class="d-flex gap-2">
+                    <button wire:click="toggleHistory" class="btn {{ $showHistory ? 'btn-dark' : 'btn-outline-secondary' }} px-3 shadow-sm">
+                        <i class="bi {{ $showHistory ? 'bi-arrow-left me-2' : 'bi-clock-history me-2' }}"></i>
+                        {{ $showHistory ? 'Kembali' : 'Riwayat' }}
+                    </button>
+                    @if(!$showHistory)
+                    <button wire:click="create" class="btn btn-primary px-4 shadow-sm" @disabled($isAdding || $isEditing)>
+                        <i class="bi bi-plus-lg me-2"></i>Tambah
+                    </button>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
-    @if($isAdding || $isEditing)
-    <div class="card border-0 shadow-sm mb-4 border-start border-4 {{ $isAdding ? 'border-success' : 'border-primary' }}">
+
+    @if($isAdding || $isEditing || $isViewing)
+    <div class="card border-0 shadow-sm mb-4 border-start border-4 {{ $isAdding ? 'border-success' : ($isViewing ? 'border-info' : 'border-primary') }}">
         <div class="card-body p-4">
             <h6 class="fw-bold mb-4 text-uppercase small tracking-wider">
-                {{ $isAdding ? 'Form Tambah Pengguna Baru' : 'Form Edit Data Pengguna' }}
+                @if($isAdding) Tambah Pengguna @elseif($isViewing) Detail Pengguna (Arsip) @else Edit Pengguna @endif
             </h6>
+            
             <form wire:submit="{{ $isAdding ? 'store' : 'update' }}">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-muted">Identifier (NIM/NIP)</label>
-                        <input type="text" wire:model="form.identifier" class="form-control @error('form.identifier') is-invalid @enderror">
-                        @error('form.identifier') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+                        <input type="text" wire:model="form.identifier" class="form-control" @disabled($isViewing)>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
-                        <input type="text" wire:model="form.name" class="form-control @error('form.name') is-invalid @enderror">
-                        @error('form.name') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+                        <input type="text" wire:model="form.name" class="form-control" @disabled($isViewing)>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small fw-bold text-muted">Role</label>
-                        <select wire:model="form.role" class="form-select @error('form.role') is-invalid @enderror">
-                            <option value="">Pilih...</option>
+                        <select wire:model="form.role" class="form-select" @disabled($isViewing)>
                             <option value="admin">Admin</option>
                             <option value="mahasiswa">Mahasiswa</option>
                             <option value="dosen">Dosen</option>
                             <option value="staff">Staff</option>
                         </select>
-                        @error('form.role') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                     </div>
-                    @if($isEditing)
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">Status</label>
-                        <select wire:model="form.status" class="form-select">
-                            <option value="pending">Pending</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    @endif
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">Password</label>
-                        <input type="password" wire:model="form.password" class="form-control @error('form.password') is-invalid @enderror">
-                        @error('form.password') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
-                    </div>
+                    
                     <div class="col-12 d-flex justify-content-end gap-2 mt-3">
-                        <button type="button" wire:click="cancel" class="btn btn-light border px-4">Batal</button>
-                        <button type="submit" class="btn text-white {{ $isAdding ? 'btn-success' : 'btn-primary' }} px-4">
-                            <span wire:loading.remove wire:target="store, update">Simpan</span>
-                            <span wire:loading wire:target="store, update">
-                                <span class="spinner-border spinner-border-sm me-2"></span>
-                            </span>
+                        <button type="button" wire:click="cancel" class="btn btn-light border px-4">
+                            {{ $isViewing ? 'Tutup' : 'Batal' }}
                         </button>
+                        
+                        @if(!$isViewing)
+                            <button type="submit" class="btn text-white {{ $isAdding ? 'btn-success' : 'btn-primary' }} px-4">
+                                <span>Simpan</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             </form>
@@ -121,12 +118,23 @@
                             </span>
                         </td>
                         <td class="text-center">
-                            <button wire:click="edit({{ $user->id }})" class="btn btn-sm btn-outline-primary border-0" title="Edit">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button wire:click="confirmDelete({{ $user->id }})" class="btn btn-sm btn-outline-danger border-0" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
-                                <i class="bi bi-trash3-fill"></i>
-                            </button>
+                            @if($showHistory)
+                                <button wire:click="view({{ $user->id }})" class="btn btn-sm btn-outline-info border-0" title="Detail">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                
+                                <button wire:click="confirmRestore({{ $user->id }})" class="btn btn-sm btn-outline-success border-0" title="Pulihkan">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            @else
+                                <button wire:click="edit({{ $user->id }})" class="btn btn-sm btn-outline-primary border-0">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                
+                                <button wire:click="confirmDelete({{ $user->id }})" class="btn btn-sm btn-outline-danger border-0">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -160,23 +168,50 @@
             </button>
         </x-slot:footer>
     </x-confirmation-modal>
+
+    <x-confirmation-modal id="restoreUserModal" title="Konfirmasi Pemulihan" type="success">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-arrow-counterclockwise text-success fs-1 me-3"></i>
+            <div>
+                <p class="mb-1 fw-bold">Pulihkan akun ini?</p>
+                <p class="text-muted small mb-0">Akun ini akan aktif kembali dan bisa login ke sistem seperti biasa.</p>
+            </div>
+        </div>
+    
+        <x-slot:footer>
+            <button type="button" wire:click="restore" class="btn btn-success px-4 text-white">
+                <span wire:loading.remove wire:target="restore">Ya, Pulihkan</span>
+                <span wire:loading wire:target="restore">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                </span>
+            </button>
+        </x-slot:footer>
+    </x-confirmation-modal>
 </div>
 
 <script>
-    function getModal() {
-        const el = document.getElementById('deleteUserModal');
+    function getModal(id) {
+        const el = document.getElementById(id);
         if (!el) return null;
     
         return bootstrap.Modal.getOrCreateInstance(el);
     }
     
+    // Listener Delete
     window.addEventListener('show-delete-modal', () => {
-        const modal = getModal();
-        modal?.show();
+        getModal('deleteUserModal')?.show(); // Kirim ID yang benar
     });
     
     window.addEventListener('hide-delete-modal', () => {
-        const modal = getModal();
-        modal?.hide();
+        getModal('deleteUserModal')?.hide();
+    });
+
+    // Listener Restore
+    window.addEventListener('show-restore-modal', () => {
+        getModal('restoreUserModal')?.show(); // Kirim ID yang benar
+    });
+
+    window.addEventListener('hide-restore-modal', () => {
+        getModal('restoreUserModal')?.hide();
     });
 </script>
