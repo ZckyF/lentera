@@ -1,5 +1,6 @@
 import './bootstrap';
-import 'bootstrap';
+import * as bootstrap from 'bootstrap';
+window.bootstrap = bootstrap;
 
 function applyTheme(theme) {
     const resolved = theme === 'system'
