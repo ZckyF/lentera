@@ -17,7 +17,7 @@
                         {{ $showHistory ? 'Arsip Pengguna' : 'Pengguna Aktif' }}
                     </h5>
                     <div class="text-muted small">
-                        {{ $showHistory ? 'Daftar akun yang telah dinonaktifkan/dihapus sementara.' : 'Manajemen data civitas Lentera.' }}
+                        {{ $showHistory ? 'Daftar akun yang telah dinonaktifkan/dihapus sementara.' : 'Manajemen data pengguna Lentera.' }}
                     </div>
                 </div>
                 <div class="d-flex gap-2">
@@ -46,21 +46,45 @@
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-muted">Identifier (NIM/NIP)</label>
-                        <input type="text" wire:model="form.identifier" class="form-control" @disabled($isViewing)>
+                        <input type="text" wire:model="form.identifier" class="form-control @error('form.identifier') is-invalid @enderror" @disabled($isViewing)>
+                        @error('form.identifier') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
-                        <input type="text" wire:model="form.name" class="form-control" @disabled($isViewing)>
+                        <input type="text" wire:model="form.name" class="form-control @error('form.name') is-invalid @enderror" @disabled($isViewing)>
+                        @error('form.name') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                     </div>
+
                     <div class="col-md-2">
                         <label class="form-label small fw-bold text-muted">Role</label>
-                        <select wire:model="form.role" class="form-select" @disabled($isViewing)>
+                        <select wire:model="form.role" class="form-select @error('form.role') is-invalid @enderror" @disabled($isViewing)>
                             <option value="admin">Admin</option>
                             <option value="mahasiswa">Mahasiswa</option>
                             <option value="dosen">Dosen</option>
                             <option value="staff">Staff</option>
                         </select>
                     </div>
+
+                    @if(!$isAdding)
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">Status Akun</label>
+                        <select wire:model="form.status" class="form-select @error('form.status') is-invalid @enderror" @disabled($isViewing)>
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        @error('form.status') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+                    </div>
+                    @endif
+
+                    @if(!$isAdding)
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">Password {{ $isEditing ? '(Opsional)' : '' }}</label>
+                        <input type="password" wire:model="form.password" class="form-control @error('form.password') is-invalid @enderror" placeholder="min. 6 karakter">
+                        @error('form.password') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+                    </div>
+                    @endif
                     
                     <div class="col-12 d-flex justify-content-end gap-2 mt-3">
                         <button type="button" wire:click="cancel" class="btn btn-light border px-4">
@@ -69,7 +93,8 @@
                         
                         @if(!$isViewing)
                             <button type="submit" class="btn text-white {{ $isAdding ? 'btn-success' : 'btn-primary' }} px-4">
-                                <span>Simpan</span>
+                                <span wire:loading.remove>Simpan Data</span>
+                                <span wire:loading><span class="spinner-border spinner-border-sm me-2"></span></span>
                             </button>
                         @endif
                     </div>
@@ -139,7 +164,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted small italic">Tidak ada data pengguna.</td>
+                        <td colspan="6" class="text-center py-5 text-muted small italic">Tidak ada data pengguna.</td>
                     </tr>
                     @endforelse
                 </tbody>

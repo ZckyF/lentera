@@ -31,11 +31,10 @@ class UserForm extends Form
             'name' => 'required|min:3',
             'identifier' => [
                 'required',
-                Rule::unique('users', 'identifier')->ignore($this->user?->id),
+                Rule::unique('users', 'identifier')->ignore(isset($this->user) ? $this->user->id : null),
             ],
             'role' => 'required|in:admin,mahasiswa,dosen,staff',
-            'status' => 'required|in:pending,active,inactive',
-            'password' => $this->user ? 'nullable|min:6' : 'required|min:6',
+            'status' => 'required|in:pending,active,inactive'
         ];
     }
 
@@ -63,8 +62,7 @@ class UserForm extends Form
             'name' => $this->name,
             'identifier' => $this->identifier,
             'role' => $this->role,
-            'status' => 'active',
-            'password' => bcrypt($this->password),
+            'status' => 'pending',
         ]);
 
         $this->reset();
@@ -72,7 +70,7 @@ class UserForm extends Form
 
     public function update()
     {
-        $this->validate();
+        $this->validate(['password' => "nullable|min:6"]);
 
         $data = [
             'name' => $this->name,

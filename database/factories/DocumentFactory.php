@@ -19,7 +19,7 @@ class DocumentFactory extends Factory
     public function definition(): array
     {
         $ext = fake()->randomElement(['pdf', 'docx']);
-        $mime = $ext === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        $mime = 'application/pdf';
 
         return [
             'title' => fake()->sentence(4),

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('identifier')->unique();
             $table->string('name');
             $table->enum('role', ['admin', 'mahasiswa', 'dosen', 'staff']);
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
             $table->rememberToken();
             $table->timestamps();

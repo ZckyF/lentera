@@ -44,6 +44,7 @@ class Index extends Component
     public function store()
     {
         $this->form->store();
+        
         $this->isAdding = false;
         session()->flash('message', 'Pengguna berhasil ditambahkan.');
     }
