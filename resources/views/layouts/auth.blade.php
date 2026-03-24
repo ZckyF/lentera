@@ -5,7 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" href="{{ asset('storage/favicon.ico') }}">
         <title>{{ $title ?? config('app.name', 'Lentera') }}</title>
-
+        <script>
+            (function() {
+                const savedTheme = localStorage.getItem('lentera_theme') || 'light';
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            })();
+        </script>
         @vite(['resources/scss/app.scss', 'resources/js/app.js'])
         @livewireStyles
     </head>

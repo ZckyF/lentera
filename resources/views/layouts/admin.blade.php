@@ -5,7 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" href="{{ asset('storage/favicon.ico') }}">
         <title>{{ $title ?? 'Dashboard' }} - {{ config('app.name', 'LENTERA') }}</title>
-
+        <script>
+            (function() {
+                const savedTheme = localStorage.getItem('lentera_theme') || 'light';
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            })();
+        </script>
         @vite(['resources/scss/app.scss', 'resources/js/app.js'])
         @livewireStyles
     </head>
@@ -15,7 +20,7 @@
             <div id="sidebarBackdrop" class="admin-sidebar-backdrop"></div>
 
             <aside class="admin-sidebar bg-primary text-white p-3">
-                <a href="{{ route('dashboard') }}" wire:navigate class="d-flex align-items-center gap-2 mb-3 text-white text-decoration-none">
+                <a href="{{ route('admin.dashboard') }}" wire:navigate class="d-flex align-items-center gap-2 mb-3 text-white text-decoration-none">
                     <img 
                         src="{{ asset('storage/white-polnes-logo.png') }}" 
                         alt="Logo Polnes" 
@@ -29,9 +34,9 @@
 
                 <nav class="nav nav-pills flex-column gap-1">
                     <a
-                        href="{{ route('dashboard') }}"
+                        href="{{ route('admin.dashboard') }}"
                         wire:navigate
-                        class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                        class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
                     >
                         <i class="bi bi-house"></i>
                         <span class="sidebar-text">Dashboard</span>
@@ -82,7 +87,7 @@
 
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                        <a class="dropdown-item" href="#" onclick="event.preventDefault();">
+                                        <a class="dropdown-item" href="{{route('settings.profile')}}" wire:navigate>
                                             <i class="bi bi-person me-2"></i>Profil
                                         </a>
                                     </li>

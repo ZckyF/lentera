@@ -49,7 +49,7 @@
             <p class="small text-muted mb-2">
                 Belum punya akun atau lupa kata sandi?
             </p>
-            <div class="p-3 border rounded bg-light">
+            <div class="p-3 border rounded">
                 <p class="small mb-2 text-secondary">
                     Silakan hubungi <strong>Admin</strong> dengan melampirkan <strong>Foto KTM</strong> asli Anda.
                 </p>
