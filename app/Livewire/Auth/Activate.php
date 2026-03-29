@@ -64,7 +64,11 @@ class Activate extends Component
 
         Auth::login($user);
 
-        $this->redirect('/dashboard', navigate: true);
+        if ($user?->role === 'admin') {
+            $this->redirect('/dashboard', navigate: true);
+        } else {
+            $this->redirect('/chatbot', navigate: true);
+        }
     }
 
     public function render()

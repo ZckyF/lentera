@@ -6,6 +6,7 @@ use App\Livewire\Admin\Documents\Index as AdminDocumentsIndex;
 use App\Livewire\Admin\Users\Index as AdminUsersIndex;
 use App\Livewire\Admin\Dashboard\Index as DashboardIndex;
 use App\Livewire\Settings\Profile;
+use App\Livewire\User\Chatbot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,7 @@ Route::middleware(['auth', 'ensure.active'])->group(function () {
     });
 
     Route::middleware(['is.role:mahasiswa,dosen,staff'])->group(function () {
-        // Route::get('/chat', ChatIndex::class)->name('chat');
+        Route::get('/chatbot', Chatbot::class)->name('chatbot');
     });
 
     Route::post('/logout', function (Request $request) {

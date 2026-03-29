@@ -31,7 +31,7 @@ class Login extends Component
         if ($user?->role === 'admin') {
             $this->redirect('/dashboard', navigate: true);
         } else {
-            $this->redirect('/chat', navigate: true);
+            $this->redirect('/chatbot', navigate: true);
         }
     }
 

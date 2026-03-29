@@ -9,9 +9,13 @@
         (function() {
             const savedTheme = localStorage.getItem('lentera_theme') || 'light';
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                updateIcon(savedTheme);
+            });
         })();
     </script>
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    @vite(['resources/scss/app.scss'])
     @livewireStyles
 </head>
 <body class="bg-light-subtle">
@@ -19,7 +23,7 @@
         <div class="row justify-content-center">
             <div class="col-md-12 col-lg-8">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="{{ auth()->user()->role !== 'admin' ? route('chat') : route('admin.dashboard') }}" class="btn btn-outline-secondary rounded-circle shadow-sm" title="Kembali">
+                    <a href="{{ auth()->user()->role !== 'admin' ? route('chatbot') : route('admin.dashboard') }}" class="btn btn-outline-secondary rounded-circle shadow-sm" title="Kembali">
                         <i class="bi bi-arrow-left"></i>
                     </a>
                     
@@ -39,7 +43,6 @@
                             </p>
                         </div>
 
-                        {{-- Slot Konten (Profile Form) --}}
                         {{ $slot }}
                     </div>
                 </div>
