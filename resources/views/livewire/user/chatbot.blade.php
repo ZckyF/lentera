@@ -37,16 +37,31 @@
             overflow: hidden;
             position: relative;
         }
-        .chat-message-list {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 120px;
-        }
         .chat-bubble {
-            max-width: min(80%, 760px);
+            max-width: 80%;
             white-space: pre-wrap;
             word-break: break-word;
-+        }
+            padding: 0rem 1rem;
+        }
+
+        .user-bubble {
+            border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
+        }
+
+        .ai-container {
+            max-width: 900px;
+        }
+
+        .ai-content {
+            font-size: 1.05rem;
+            color: var(--bs-body-color);
+        }
+
+        .chat-message-list {
+            display: flex;
+            flex-direction: column;
+        }
+        
         .chat-input-wrap {
             position: absolute;
             left: 0;
@@ -144,24 +159,26 @@
                     </div>
                 </nav>
 
-                <div class="chat-message-list px-3 px-md-4 py-4" x-ref="chatScroll">
+                <div class="chat-message-list px-3 px-md-4 py-4" id="chatScroll">
                     @forelse($messages as $message)
                         @if($message['role'] === 'user')
-                            <div class="d-flex justify-content-end mb-3">
-                                <div class="chat-bubble bg-primary text-white rounded-4 px-3 py-2 shadow-sm">
+                            <div class="d-flex justify-content-end mb-2">
+                                <div class="chat-bubble user-bubble bg-primary text-white shadow-sm">
                                     {{ $message['content'] }}
                                 </div>
                             </div>
                         @else
-                            <div class="d-flex justify-content-start mb-3">
-                                <div class="chat-bubble d-flex gap-2">
-                                    <div class="pt-1">
+                            <div class="d-flex justify-content-start mb-5">
+                                <div class="ai-container d-flex gap-3 w-100">
+                                    <div class="flex-shrink-0">
                                         <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-circle p-2">
                                             <i class="bi bi-robot"></i>
                                         </span>
                                     </div>
-                                    <div class="rounded-4 px-3 py-2 bg-body-tertiary border">
-                                        {{ $message['content'] }}
+                                    <div class="ai-content flex-grow-1">
+                                        <div class="text-body lh-lg">
+                                            {{ $message['content'] }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -178,8 +195,9 @@
                         <div class="chat-input-pill p-2 d-flex align-items-end gap-2 shadow-sm">
                             <textarea
                                 wire:model="prompt"
-                                x-on:input="autoResize($el)"
-                                x-on:keydown.enter.prevent="$event.shiftKey || $wire.sendMessage()"
+                                id="chatInput"
+                                oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                                wire:keydown.enter.prevent="sendMessage"
                                 class="form-control"
                                 rows="1"
                                 placeholder="Ask Lentera AI..."
@@ -270,9 +288,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             const chatScroll = document.querySelector('.chat-message-list');
             const chatInput = document.querySelector('textarea');
+            const container = document.getElementById('chatScroll');
 
             const scrollToBottom = () => {
                 if (chatScroll) chatScroll.scrollTop = chatScroll.scrollHeight;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
             };
 
             if (chatInput) {
@@ -287,6 +309,12 @@
                     setTimeout(scrollToBottom, 50);
                 });
             }
+
+            document.addEventListener('livewire:initialized', () => {
+                Livewire.on('chat-message-added', () => {
+                    setTimeout(scrollToBottom, 50);
+                });
+            });
 
             scrollToBottom();
         });

@@ -35,8 +35,14 @@ class Chatbot extends Component
         $this->messages = [
             [
                 'id' => (string) str()->uuid(),
-                'role' => 'assistant',
+                'role' => 'ai',
                 'content' => 'Halo, saya Lentera AI. Ada yang bisa saya bantu hari ini?',
+                'created_at' => now()->toDateTimeString(),
+            ],
+            [
+                'id' => (string) str()->uuid(),
+                'role' => 'user',
+                'content' => 'Aman.',
                 'created_at' => now()->toDateTimeString(),
             ],
         ];
