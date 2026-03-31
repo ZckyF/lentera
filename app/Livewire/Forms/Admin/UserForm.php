@@ -34,7 +34,7 @@ class UserForm extends Form
                 Rule::unique('users', 'identifier')->ignore(isset($this->user) ? $this->user->id : null),
             ],
             'role' => 'required|in:admin,mahasiswa,dosen,staff',
-            'status' => 'required|in:pending,active,inactive'
+            'status' => 'required|in:active,inactive'
         ];
     }
 
@@ -56,13 +56,14 @@ class UserForm extends Form
 
     public function store()
     {
-        $this->validate();
+        $this->validate(['password' => "required|min:6"]);
 
         User::create([
             'name' => $this->name,
             'identifier' => $this->identifier,
             'role' => $this->role,
-            'status' => 'pending',
+            'status' => 'active',
+            'password' => $this->password
         ]);
 
         $this->reset();

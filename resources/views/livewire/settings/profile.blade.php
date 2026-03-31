@@ -13,7 +13,7 @@
                 <h6 class="fw-bold text-uppercase small mb-3">Informasi Identitas</h6>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Identifier (NIM/NIP)</label>
+                        <label class="form-label small fw-semibold">Identitas (NIM/NIP)</label>
                         <input type="text" 
                                wire:model="form.identifier" 
                                class="form-control @error('form.identifier') is-invalid @enderror" 

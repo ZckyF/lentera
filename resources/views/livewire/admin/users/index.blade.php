@@ -70,7 +70,6 @@
                     <div class="col-md-2">
                         <label class="form-label small fw-bold text-muted">Status Akun</label>
                         <select wire:model="form.status" class="form-select @error('form.status') is-invalid @enderror" @disabled($isViewing)>
-                            <option value="pending">Pending</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
@@ -78,13 +77,11 @@
                     </div>
                     @endif
 
-                    @if(!$isAdding)
                     <div class="col-md-2">
                         <label class="form-label small fw-bold text-muted">Password {{ $isEditing ? '(Opsional)' : '' }}</label>
                         <input type="password" wire:model="form.password" class="form-control @error('form.password') is-invalid @enderror" placeholder="min. 6 karakter">
                         @error('form.password') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                     </div>
-                    @endif
                     
                     <div class="col-12 d-flex justify-content-end gap-2 mt-3">
                         <button type="button" wire:click="cancel" class="btn btn-light border px-4">

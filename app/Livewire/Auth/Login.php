@@ -22,12 +22,6 @@ class Login extends Component
     
         $user = Auth::user();
     
-        if ($user?->status === 'pending') {
-            session(['pending_identifier' => $user->identifier]);
-            $this->redirect('/activate', navigate: true);
-            return;
-        }
-    
         if ($user?->role === 'admin') {
             $this->redirect('/dashboard', navigate: true);
         } else {
