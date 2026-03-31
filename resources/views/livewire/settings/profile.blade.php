@@ -1,10 +1,12 @@
 <div>
     @if (session()->has('message'))
-        <div class="alert alert-success d-flex align-items-center mb-4 border-0 shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <div>{{ session('message') }}</div>
+        <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <div>{{ session('message') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     @endif
 
     <form wire:submit="save">

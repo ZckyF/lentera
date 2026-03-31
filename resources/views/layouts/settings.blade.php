@@ -15,7 +15,7 @@
             });
         })();
     </script>
-    @vite(['resources/scss/app.scss'])
+    @vite(['resources/scss/app.scss','resources/js/app.js'])
     @livewireStyles
 </head>
 <body class="bg-light-subtle">

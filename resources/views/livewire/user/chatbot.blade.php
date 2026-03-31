@@ -100,20 +100,49 @@
                 </button>
 
                 <div class="overflow-auto pe-1">
-                    @foreach($this->groupedConversations as $group => $items)
-                        <div class="small text-uppercase text-muted fw-semibold mb-2 mt-3">{{ $group }}</div>
-                        <div class="d-flex flex-column gap-1">
-                            @foreach($items as $item)
+                    @if(!empty($this->groupedConversations))
+                        @foreach($this->groupedConversations as $group => $items)
+                            <div class="small text-uppercase text-muted fw-semibold mb-2 mt-3">{{ $group }}</div>
+                            <div class="d-flex flex-column gap-1">
+                                @foreach($items as $item)
                                 <div
+                                    wire:key="session-{{ $item['id'] }}"
                                     wire:click="openConversation('{{ $item['id'] }}')"
-                                    class="chat-history-item p-2 d-flex align-items-start justify-content-between {{ $activeConversationId === $item['id'] ? 'active' : '' }}"
+                                    class="chat-history-item p-2 d-flex align-items-center justify-content-between {{ $activeConversationId === $item['id'] ? 'active' : '' }}"
                                 >
                                     <span class="small text-truncate pe-2">{{ $item['title'] }}</span>
-                                    <i class="bi bi-three-dots text-muted"></i>
+                                    
+                                    <div class="dropdown" wire:click.stop>
+                                        <button class="btn btn-link btn-sm p-0 text-muted border-0" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <button class="dropdown-item small" wire:click="setEditSession('{{ $item['id'] }}', '{{ $item['title'] }}')" data-bs-toggle="modal" data-bs-target="#editTitleModal">
+                                                    <i class="bi bi-pencil me-2"></i> Edit Judul
+                                                </button>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <button class="dropdown-item small text-danger" wire:click="setDeleteSession('{{ $item['id'] }}')" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                                    <i class="bi bi-trash me-2"></i> Hapus
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             @endforeach
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-chat-dots text-muted opacity-50" style="font-size: 2rem;"></i>
+                            </div>
+                            <p class="small text-muted mb-0">Belum ada riwayat chat.</p>
+                            <p class="x-small text-muted opacity-75">Mulai obrolan baru sekarang!</p>
                         </div>
-                    @endforeach
+                    @endif
                 </div>
             </aside>
 
@@ -207,9 +236,9 @@
                             </button>
                         </div>
                         @error('prompt') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                        <div class="text-center text-muted small mt-2">
+                        {{-- <div class="text-center text-muted small mt-2">
                             Lentera AI can make mistakes. Check important info.
-                        </div>
+                        </div> --}}
                     </form>
                 </div>
             </div>
@@ -253,6 +282,45 @@
             </form>
         </x-slot:footer>
     </x-confirmation-modal>
+
+    <x-confirmation-modal id="editTitleModal" title="Ubah Judul Percakapan" type="primary">
+        <div class="mb-0">
+            <label class="form-label small fw-bold">Judul Baru</label>
+            <input type="text" 
+                class="form-control" 
+                wire:model="editingTitle" 
+                placeholder="Masukkan judul baru...">
+            @error('sessionForm.title') <span class="text-danger small">{{ $message }}</span> @enderror
+        </div>
+        
+    <x-slot:footer>
+        <button type="button" 
+                class="btn btn-primary px-4 d-flex align-items-center" 
+                wire:click="updateSessionTitle"
+                wire:loading.attr="disabled">
+            
+            <span wire:loading wire:target="updateSessionTitle" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            
+            <span wire:loading.remove wire:target="updateSessionTitle">Simpan Perubahan</span>
+        </button>
+    </x-slot:footer>
+    </x-confirmation-modal>
+
+    <x-confirmation-modal id="deleteConfirmModal" title="Hapus Chat" type="danger">
+        Apakah Anda yakin ingin menghapus riwayat percakapan ini? Data yang dihapus tidak dapat dikembalikan.
+        
+        <x-slot:footer>
+            <button type="button" 
+                    class="btn btn-danger px-4" 
+                    wire:click="deleteSession">
+            <span wire:loading wire:target="deleteSession" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+
+            <span wire:loading.remove wire:target="deleteSession">Ya,Hapus</span>
+            </button>
+        </x-slot:footer>
+    </x-confirmation-modal>
+
+    <x-toast />
 
     @livewireScripts
 
@@ -317,6 +385,14 @@
             });
 
             scrollToBottom();
+        });
+
+        document.addEventListener('close-modal', event => {
+            let modalElement = document.getElementById(event.detail.id);
+            let modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
         });
     </script>
 </div>
