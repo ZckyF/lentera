@@ -19,6 +19,7 @@ class ChatSessionFactory extends Factory
     public function definition(): array
     {
         return [
+            'slug' => fake()->regexify('[A-Za-z0-9]{16}'),
             'user_id' => User::factory(),
             'title' => fake()->sentence(3),
         ];

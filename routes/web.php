@@ -27,7 +27,7 @@ Route::middleware(['auth', 'ensure.active'])->group(function () {
     });
 
     Route::middleware(['is.role:mahasiswa,dosen,staff'])->group(function () {
-        Route::get('/chatbot', Chatbot::class)->name('chatbot');
+        Route::get('/chatbot/{slug?}', Chatbot::class)->name('chatbot');
     });
 
     Route::post('/logout', function (Request $request) {
@@ -40,5 +40,5 @@ Route::middleware(['auth', 'ensure.active'])->group(function () {
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', Login::class)->name('login');
-    Route::get('/activate', Activate::class)->name('activate');
+    // Route::get('/activate', Activate::class)->name('activate');
 });

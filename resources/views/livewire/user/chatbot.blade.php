@@ -95,43 +95,53 @@
     <div class="card border-0 shadow-sm lentera-chat-card position-relative">
         <div class="d-flex h-100">
             <aside class="chat-sidebar d-none d-lg-flex flex-column p-3">
-                <button type="button" class="btn btn-primary w-100 mb-3" wire:click="newChat">
-                    <i class="bi bi-plus-lg me-2"></i>New Chat
-                </button>
+            <a href="{{ route('chatbot') }}" wire:navigate class="btn btn-primary w-100 mb-3">
+                <i class="bi bi-plus-lg"></i> Chat Baru
+            </a>
 
                 <div class="overflow-auto pe-1">
                     @if(!empty($this->groupedConversations))
                         @foreach($this->groupedConversations as $group => $items)
-                            <div class="small text-uppercase text-muted fw-semibold mb-2 mt-3">{{ $group }}</div>
+                            <div class="small text-uppercase text-muted fw-semibold mb-2 mt-4 px-2">{{ $group }}</div>
                             <div class="d-flex flex-column gap-1">
                                 @foreach($items as $item)
-                                <div
-                                    wire:key="session-{{ $item['id'] }}"
-                                    wire:click="openConversation('{{ $item['id'] }}')"
-                                    class="chat-history-item p-2 d-flex align-items-center justify-content-between {{ $activeConversationId === $item['id'] ? 'active' : '' }}"
-                                >
-                                    <span class="small text-truncate pe-2">{{ $item['title'] }}</span>
-                                    
-                                    <div class="dropdown" wire:click.stop>
-                                        <button class="btn btn-link btn-sm p-0 text-muted border-0" type="button" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                            <li>
-                                                <button class="dropdown-item small" wire:click="setEditSession('{{ $item['id'] }}', '{{ $item['title'] }}')" data-bs-toggle="modal" data-bs-target="#editTitleModal">
-                                                    <i class="bi bi-pencil me-2"></i> Edit Judul
-                                                </button>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <button class="dropdown-item small text-danger" wire:click="setDeleteSession('{{ $item['id'] }}')" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-                                                    <i class="bi bi-trash me-2"></i> Hapus
-                                                </button>
-                                            </li>
-                                        </ul>
+                                    <div class="chat-history-item d-flex align-items-center position-relative rounded-2 {{ $activeConversationId === $item['id'] ? 'active bg-primary-subtle' : '' }}">
+                                        
+                                        <a wire:key="session-{{ $item['id'] }}"
+                                        href="{{ route('chatbot', $item['slug']) }}"
+                                        wire:navigate
+                                        class="flex-grow-1 p-2 text-decoration-none text-truncate d-flex align-items-center overflow-hidden">
+                                            <span class="small text-body {{ $activeConversationId === $item['id'] ? 'fw-semibold' : '' }}">
+                                                {{ $item['title'] }}
+                                            </span>
+                                        </a>
+
+                                        <div class="dropdown pe-2">
+                                            <button class="btn btn-link btn-sm p-0 text-muted border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                <li>
+                                                    <button class="dropdown-item small" 
+                                                            wire:click="setEditSession('{{ $item['id'] }}', '{{ $item['title'] }}')" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#editTitleModal">
+                                                        <i class="bi bi-pencil me-2"></i> Edit Judul
+                                                    </button>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <button class="dropdown-item small text-danger" 
+                                                            wire:click="setDeleteSession('{{ $item['id'] }}')" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#deleteConfirmModal">
+                                                        <i class="bi bi-trash me-2"></i> Hapus
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
                             </div>
                         @endforeach
                     @else
@@ -236,9 +246,6 @@
                             </button>
                         </div>
                         @error('prompt') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                        {{-- <div class="text-center text-muted small mt-2">
-                            Lentera AI can make mistakes. Check important info.
-                        </div> --}}
                     </form>
                 </div>
             </div>
@@ -251,9 +258,9 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <button type="button" class="btn btn-primary w-100 mb-3" wire:click="newChat" data-bs-dismiss="offcanvas">
-                <i class="bi bi-plus-lg me-2"></i>New Chat
-            </button>
+            <a href="{{ route('chatbot') }}" wire:navigate class="btn btn-outline-primary w-100 mb-3">
+                <i class="bi bi-plus-lg"></i> Chat Baru
+            </a>
 
             @foreach($this->groupedConversations as $group => $items)
                 <div class="small text-uppercase text-muted fw-semibold mb-2 mt-3">{{ $group }}</div>

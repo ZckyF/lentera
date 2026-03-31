@@ -26,7 +26,7 @@ class DocumentChatSeeder extends Seeder
                 ->create(['uploaded_by' => $user->id]);
 
             for ($s = 0; $s < 3; $s++) {
-                $session = ChatSession::create([
+                $session = ChatSession::factory()->create([
                     'user_id' => $user->id,
                     'title' => fake()->sentence(3),
                 ]);

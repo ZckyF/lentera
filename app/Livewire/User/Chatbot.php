@@ -8,6 +8,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
+use function Livewire\str;
+
 #[Layout('layouts.user')]
 #[Title('Lentera AI')]
 class Chatbot extends Component
@@ -20,24 +22,12 @@ class Chatbot extends Component
 
     public ChatSessionForm $sessionForm;
 
-    /**
-     * @var array<int, array{id:string,title:string,date:string}>
-     */
     public array $conversations = [];
 
-    /**
-     * @var array<int, array{id:string,role:string,content:string,created_at:string}>
-     */
     public array $messages = [];
 
-    public function mount(): void
+    public function mount($slug = null)
     {
-        $this->conversations = [
-            ['id' => 'conv-1', 'title' => 'Rangkuman Dokumen Akreditasi', 'date' => now()->toDateString()],
-            ['id' => 'conv-2', 'title' => 'Analisis Kebutuhan Sistem', 'date' => now()->toDateString()],
-            ['id' => 'conv-3', 'title' => 'Draft Laporan Mingguan', 'date' => now()->subDay()->toDateString()],
-        ];
-
         $this->messages = [
             [
                 'id' => (string) str()->uuid(),
@@ -46,52 +36,41 @@ class Chatbot extends Component
                 'created_at' => now()->toDateTimeString(),
             ]
         ];
-    }
+        if ($slug) {
+            $session = ChatSession::where('user_id', auth()->id())
+                ->where('slug', $slug)
+                ->first();
 
-    public function newChat(): void
-    {
-        $id = 'conv-' . str()->random(8);
+            if ($session) {
+                $this->activeConversationId = $session->id;
+                $this->chatTitle = $session->title;
+                
 
-        array_unshift($this->conversations, [
-            'id' => $id,
-            'title' => 'Percakapan Baru',
-            'date' => now()->toDateString(),
-        ]);
+            $newMessages = $session->chatMessages()
+                ->orderBy('created_at', 'asc')
+                ->get()
+                ->map(fn($m) => [
+                    'role' => $m->sender === 'user' ? 'user' : 'assistant',
+                    'content' => $m->message
+                ])
+                ->toArray();
 
-        $this->activeConversationId = $id;
-        $this->chatTitle = 'Lentera AI';
-        $this->messages = [
-            [
-                'id' => (string) str()->uuid(),
-                'role' => 'assistant',
-                'content' => 'Chat baru dimulai. Silakan tulis pertanyaan Anda.',
-                'created_at' => now()->toDateTimeString(),
-            ],
-        ];
-
-        $this->dispatch('chat-message-added');
-    }
-
-    public function openConversation(string $id): void
-    {
-        $conversation = collect($this->conversations)->firstWhere('id', $id);
-        if (!$conversation) {
-            return;
-        }
-
-        $this->activeConversationId = $id;
-        $this->chatTitle = $conversation['title'];
-
-        if (count($this->messages) === 0) {
-            $this->messages[] = [
-                'id' => (string) str()->uuid(),
-                'role' => 'assistant',
-                'content' => 'Percakapan dimuat. Silakan lanjutkan pertanyaan Anda.',
-                'created_at' => now()->toDateTimeString(),
+            $this->messages = [...$this->messages, ...$newMessages];
+            } else {
+                return redirect()->route('chatbot');
+            }
+        } else {
+            $this->activeConversationId = null;
+            $this->messages = [
+                [
+                    'id' => (string) str()->uuid(),
+                    'role' => 'ai',
+                    'content' => 'Halo, saya Lentera AI. Ada yang bisa saya bantu hari ini?',
+                    'created_at' => now()->toDateTimeString(),
+                ]
             ];
+            $this->chatTitle = 'Lentera AI';
         }
-
-        $this->dispatch('chat-message-added');
     }
 
     public function sendMessage(): void
@@ -158,6 +137,11 @@ class Chatbot extends Component
         $this->sessionForm->id = $this->editingSessionId;
         $this->sessionForm->title = $this->editingTitle;
         $this->sessionForm->update();
+
+        if ($this->editingSessionId === $this->activeConversationId) {
+            $this->chatTitle = $this->editingTitle;
+        }
+        
         $this->dispatch('close-modal', id: 'editTitleModal');
         $this->dispatch('show-toast', 
             message: 'Judul berhasil diperbarui!', 
@@ -197,10 +181,10 @@ class Chatbot extends Component
                 $date = $session->created_at->toDateString();
     
                 if ($date === now()->toDateString()) {
-                    return 'Today';
+                    return 'Hari ini';
                 }
                 if ($date === now()->subDay()->toDateString()) {
-                    return 'Yesterday';
+                    return 'Kemarin';
                 }
     
                 return $session->created_at->translatedFormat('d M Y');
