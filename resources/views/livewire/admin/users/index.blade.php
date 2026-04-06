@@ -131,7 +131,6 @@
                             @php
                                 $statusBadge = [
                                     'active' => 'bg-success',
-                                    'pending' => 'bg-warning text-dark',
                                     'inactive' => 'bg-danger'
                                 ][$user->status];
                             @endphp

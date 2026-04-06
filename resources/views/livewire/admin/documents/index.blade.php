@@ -51,7 +51,7 @@
 
                 <form wire:submit="{{ $isAdding ? 'store' : 'update' }}">
                     <div class="row g-3">
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold text-muted">Judul Dokumen</label>
                             <input type="text" wire:model="form.title" class="form-control @error('form.title') is-invalid @enderror" @disabled($isViewing)>
                             @error('form.title') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
@@ -61,6 +61,15 @@
                             <label class="form-label small fw-bold text-muted">Tahun</label>
                             <input type="number" wire:model="form.year" class="form-control @error('form.year') is-invalid @enderror" min="1900" max="2099" @disabled($isViewing)>
                             @error('form.year') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-muted">Status</label>
+                        <select wire:model="form.status" class="form-select @error('form.status') is-invalid @enderror" @disabled($isViewing)>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                            @error('form.status') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-5">
@@ -122,6 +131,7 @@
                         <th class="border-0 py-3 small fw-bold text-muted">TAHUN</th>
                         <th class="border-0 py-3 small fw-bold text-muted">TIPE FILE</th>
                         <th class="border-0 py-3 small fw-bold text-muted">UKURAN</th>
+                        <th class="border-0 py-3 small fw-bold text-muted">STATUS</th>
                         <th class="border-0 py-3 small fw-bold text-muted text-center">AKSI</th>
                     </tr>
                 </thead>
@@ -147,6 +157,17 @@
                                 </span>
                             </td>
                             <td>{{ number_format(((int) $document->file_size) / 1024 / 1024, 2) }} MB</td>
+                            <td>
+                                @php
+                                    $statusBadge = [
+                                        'active' => 'bg-success',
+                                        'inactive' => 'bg-danger'
+                                    ][$document->status];
+                                @endphp
+                                <span class="badge {{ $statusBadge }} rounded-pill" style="font-size: 0.7rem;">
+                                    {{ ucfirst($document->status) }}
+                                </span>
+                            </td>
                             <td class="text-center">
                                 @if($showHistory)
                                     <button wire:click="view({{ $document->id }})" class="btn btn-sm btn-outline-info border-0" title="Detail">

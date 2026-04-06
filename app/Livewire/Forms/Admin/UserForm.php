@@ -13,7 +13,7 @@ class UserForm extends Form
     public $name = '';
     public $identifier = '';
     public $role = '';
-    public $status = 'pending';
+    public $status = 'active';
     public $password = '';
 
     public function setUser(User $user)

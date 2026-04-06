@@ -2,8 +2,13 @@
 
 namespace App\Livewire\User;
 
+use App\Events\ChatMessageAdded;
 use App\Livewire\Forms\Chatbot\ChatSessionForm;
+use App\Models\ChatMessage;
 use App\Models\ChatSession;
+use App\Models\Document;
+use App\Services\OpenRouterService;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -16,8 +21,8 @@ class Chatbot extends Component
 {
     public string $chatTitle = 'Lentera AI';
     public string $prompt = '';
-    public ?string $activeConversationId = 'conv-1';
-    public string $editingSessionId;
+    public $activeConversationId = null;
+    public $editingSessionId;
     public string $editingTitle;
 
     public ChatSessionForm $sessionForm;
@@ -30,10 +35,8 @@ class Chatbot extends Component
     {
         $this->messages = [
             [
-                'id' => (string) str()->uuid(),
                 'role' => 'ai',
-                'content' => 'Halo, saya Lentera AI. Ada yang bisa saya bantu hari ini?',
-                'created_at' => now()->toDateTimeString(),
+                'content' => 'Halo, saya Lentera AI. Ada yang bisa saya bantu hari ini?'
             ]
         ];
         if ($slug) {
@@ -44,13 +47,12 @@ class Chatbot extends Component
             if ($session) {
                 $this->activeConversationId = $session->id;
                 $this->chatTitle = $session->title;
-                
 
             $newMessages = $session->chatMessages()
                 ->orderBy('created_at', 'asc')
                 ->get()
                 ->map(fn($m) => [
-                    'role' => $m->sender === 'user' ? 'user' : 'assistant',
+                    'role' => $m->sender === 'user' ? 'user' : 'ai',
                     'content' => $m->message
                 ])
                 ->toArray();
@@ -61,70 +63,102 @@ class Chatbot extends Component
             }
         } else {
             $this->activeConversationId = null;
-            $this->messages = [
-                [
-                    'id' => (string) str()->uuid(),
-                    'role' => 'ai',
-                    'content' => 'Halo, saya Lentera AI. Ada yang bisa saya bantu hari ini?',
-                    'created_at' => now()->toDateTimeString(),
-                ]
-            ];
             $this->chatTitle = 'Lentera AI';
         }
     }
 
-    public function sendMessage(): void
+    public function sendMessage(OpenRouterService $aiService): void
     {
         $this->validate([
             'prompt' => ['required', 'string', 'max:4000'],
         ]);
 
-        $input = trim($this->prompt);
+        $userMessage = trim($this->prompt);
+        $this->prompt = '';
 
-        $this->messages[] = [
-            'id' => (string) str()->uuid(),
-            'role' => 'user',
-            'content' => $input,
-            'created_at' => now()->toDateTimeString(),
-        ];
+        if (is_null($this->activeConversationId)) {
+            $newSession = ChatSession::create([
+                'user_id' => auth()->id(),
+                'title' => Str::limit($userMessage, 30),
+                'slug' => str()->random(16),
+            ]);
 
-        $this->messages[] = [
-            'id' => (string) str()->uuid(),
-            'role' => 'assistant',
-            'content' => 'Ini adalah balasan contoh. Integrasikan ke service AI Anda untuk respons real-time streaming.',
-            'created_at' => now()->toDateTimeString(),
-        ];
+            $this->activeConversationId = $newSession->id;
+            $this->chatTitle = $newSession->title;
+            
+            $this->js("window.history.replaceState({}, '', '/chatbot/{$newSession->slug}')");
+        }
 
-        if ($this->chatTitle === 'Lentera AI' || $this->chatTitle === 'Percakapan Baru') {
-            $this->chatTitle = str($input)->limit(48)->toString();
-            foreach ($this->conversations as $index => $conversation) {
-                if ($conversation['id'] === $this->activeConversationId) {
-                    $this->conversations[$index]['title'] = $this->chatTitle;
-                    break;
-                }
+        ChatMessage::create([
+            'session_id' => $this->activeConversationId,
+            'sender' => 'user',
+            'message' => $userMessage,
+        ]);
+
+        $this->messages[] = ['role' => 'user', 'content' => $userMessage];
+
+        $context = "";
+        $docIds = [];
+
+        $keywords = ['apa', 'bagaimana', 'siapa', 'kapan', 'jelaskan', 'data', 'dokumen', 'berdasarkan'];
+        $isAskingData = Str::contains(Str::lower($userMessage), $keywords);
+
+        if ($isAskingData && strlen($userMessage) > 10) {
+            $relatedDocs = Document::where('status', 'active')
+                ->where('content_raw', 'LIKE', "%{$userMessage}%")
+                ->limit(2) 
+                ->get();
+
+            foreach ($relatedDocs as $doc) {
+                $context .= "Dokumen: {$doc->title} ({$doc->year})\nIsi: " . Str::limit($doc->content_raw, 1200) . "\n---\n";
+                $docIds[] = $doc->id;
             }
         }
 
-        $this->prompt = '';
+        $systemPrompt = "Anda adalah Lentera AI. Jawablah berdasarkan dokumen yang diberikan. 
+                WAJIB: Jika jawaban ada di dokumen, sebutkan nomor PASAL atau BAB-nya di akhir kalimat. 
+                Contoh: 'Pendaftaran dilakukan di gedung A (Pasal 4)'. 
+                Jika tidak ada informasi pasal, sebutkan saja judul dokumennya." . 
+            ($context 
+                ? "Gunakan data berikut untuk menjawab. Jika tidak ada di data, katakan sejujurnya: \n" . $context 
+                : "Jawablah dengan gaya bahasa yang chill namun sopan.");
+
+        $aiResponse = $aiService->ask($systemPrompt, $userMessage);
+
+        $aiMsgRecord = ChatMessage::create([
+            'session_id' => $this->activeConversationId,
+            'sender' => 'ai',
+            'message' => $aiResponse,
+            'doc_reference' => count($docIds) > 0 ? json_encode($docIds) : null,
+        ]);
+
+        $this->messages[] = ['role' => 'assistant', 'content' => $aiResponse];
+        
+        broadcast(new ChatMessageAdded($aiMsgRecord))->toOthers();
+        
         $this->dispatch('chat-message-added');
     }
 
-    // public function getGroupedConversationsProperty(): array
-    // {
-    //     return collect($this->conversations)
-    //         ->groupBy(function (array $conversation) {
-    //             $date = $conversation['date'];
-    //             if ($date === now()->toDateString()) {
-    //                 return 'Today';
-    //             }
-    //             if ($date === now()->subDay()->toDateString()) {
-    //                 return 'Yesterday';
-    //             }
+    public function getListeners()
+    {
+        if (! $this->activeConversationId) {
+            return [];
+        }
 
-    //             return \Carbon\Carbon::parse($date)->translatedFormat('d M Y');
-    //         })
-    //         ->toArray();
-    // }
+        return [
+            "echo-private:chat.{$this->activeConversationId},ChatMessageAdded" => 'handleBroadcastedMessage',
+        ];
+    }
+
+    public function handleBroadcastedMessage($event)
+    {
+        if ($event['message']['session_id'] == $this->activeConversationId) {
+            $this->messages[] = [
+                'role' => $event['message']['sender'],
+                'content' => $event['message']['message']
+            ];
+        }
+    }
 
     public function setEditSession($id, $currentTitle)
     {
@@ -169,6 +203,8 @@ class Chatbot extends Component
                 message: 'Percakapan berhasil dihapus!',
                 type: 'success'
             );
+
+            $this->redirect(route('chatbot'), navigate: true);
         }
     }
 

@@ -53,7 +53,7 @@
                 <p class="small mb-2 text-secondary">
                     Silakan hubungi <strong>Admin</strong> dengan melampirkan <strong>Foto KTM</strong> asli Anda.
                 </p>
-                <a href="https://wa.me/6287777777777" target="_blank" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-2">
+                <a href="https://wa.me/6287777777777" target="_blank" class="btn btn-sm btn-success d-inline-flex align-items-center gap-2 text-white">
                     <i class="bi bi-whatsapp"></i>
                     0877-7777-7777
                 </a>

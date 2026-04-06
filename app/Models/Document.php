@@ -19,14 +19,13 @@ class Document extends Model
         'page_count',
         'file_size',
         'content_raw',
-        'is_active',
+        'status',
         'uploaded_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
             'year' => 'integer',
             'page_count' => 'integer',
             'file_size' => 'integer',

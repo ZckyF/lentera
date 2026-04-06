@@ -34,14 +34,16 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            min-height: 0;
             overflow: hidden;
             position: relative;
         }
         .chat-bubble {
             max-width: 80%;
             white-space: pre-wrap;
-            word-break: break-word;
+            /* word-break: break-word; */
             padding: 0rem 1rem;
+            margin-bottom: 30px;
         }
 
         .user-bubble {
@@ -58,8 +60,13 @@
         }
 
         .chat-message-list {
+            flex: 1;
+            overflow-y: auto;
             display: flex;
+            margin-bottom: 100px;
             flex-direction: column;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
         }
         
         .chat-input-wrap {
@@ -123,7 +130,7 @@
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                                 <li>
                                                     <button class="dropdown-item small" 
-                                                            wire:click="setEditSession('{{ $item['id'] }}', '{{ $item['title'] }}')" 
+                                                            wire:click="setEditSession({{ $item['id'] }}, '{{ $item['title'] }}')" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#editTitleModal">
                                                         <i class="bi bi-pencil me-2"></i> Edit Judul
@@ -239,10 +246,12 @@
                                 wire:keydown.enter.prevent="sendMessage"
                                 class="form-control"
                                 rows="1"
-                                placeholder="Ask Lentera AI..."
+                                placeholder="Bertanya ke lentera AI..."
                             ></textarea>
-                            <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                                <i class="bi bi-send-fill"></i>
+                            <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;" wire:loading.attr="disabled">
+                                <span wire:loading wire:target="sendMessage" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            
+                                <span wire:loading.remove wire:target="sendMessage"><i class="bi bi-send-fill"></i></span>
                             </button>
                         </div>
                         @error('prompt') <div class="text-danger small mt-1">{{ $message }}</div> @enderror

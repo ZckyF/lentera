@@ -21,11 +21,15 @@ class DocumentForm extends Form
     #[Validate('nullable|file|mimes:pdf|max:10240')]
     public $file;
 
+    #[Validate('required|in:active,inactive')]
+    public $status = 'active';
+
     public function setDocument(Document $document)
     {
         $this->document = $document;
         $this->title = $document->title;
         $this->year = $document->year;
+        $this->status = $document->status;
     }
 
     public function messages() 
@@ -43,6 +47,9 @@ class DocumentForm extends Form
             'file.file' => 'Format yang diunggah harus berupa berkas/file.',
             'file.mimes' => 'Hanya mendukung format berkas PDF.',
             'file.max' => 'Ukuran berkas maksimal adalah 10 MB.',
+
+            'status.in' => 'Status tidak valid.',
+            'status.required' => 'Status wajib diisi.',
         ];
     }
 
@@ -72,6 +79,7 @@ class DocumentForm extends Form
             'content_raw' => $contentRaw,
             'page_count' => $pageCount,
             'uploaded_by' => auth()->id(),
+            'status' => $this->status
         ]);
 
         $this->reset();
@@ -84,6 +92,7 @@ class DocumentForm extends Form
         $data = [
             'title' => $this->title,
             'year' => $this->year,
+            'status' => $this->status
         ];
 
         if ($this->file) {
