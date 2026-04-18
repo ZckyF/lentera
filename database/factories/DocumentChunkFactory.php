@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Document;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Pgvector\Laravel\Vector;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\DocumentChunk>
@@ -22,6 +23,11 @@ class DocumentChunkFactory extends Factory
             'content' => fake()->paragraph(5),
             'page_number' => fake()->numberBetween(1, 50),
             'chunk_order' => 1,
+            'embedding' => fake()->optional(0.5)->passthrough(
+                new Vector(
+                    array_map(fn() => fake()->randomFloat(8, -1, 1), range(1, 768))
+                )
+            ),
         ];
     }
 }

@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('document_id')->constrained('documents')->cascadeOnDelete();
             $table->text('content'); 
             $table->integer('page_number')->nullable();
-            $table->integer('chunk_order');          
+            $table->integer('chunk_order');      
+            $table->vector('embedding', 3072)->nullable();    
             $table->timestamps();
             $table->fullText('content');
         });

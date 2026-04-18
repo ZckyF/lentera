@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Pgvector\Laravel\Vector;
 
 class DocumentChunk extends Model
 {
@@ -15,7 +16,12 @@ class DocumentChunk extends Model
         'document_id',
         'content',
         'page_number',
-        'chunk_order'
+        'chunk_order',
+        'embedding'
+    ];
+
+    protected $casts = [
+        'embedding' => Vector::class
     ];
     
     public function document(): BelongsTo

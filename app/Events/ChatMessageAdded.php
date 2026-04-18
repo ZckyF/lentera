@@ -23,7 +23,7 @@ class ChatMessageAdded implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('chat.' . $this->message->chatSession->user_id),
+            new PrivateChannel('chat.' . $this->message->session_id),
         ];
     }
 }

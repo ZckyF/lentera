@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms\Admin;
 
+use App\Jobs\ProcessDocumentChunking;
 use App\Models\Document;
 use Livewire\Form;
 use Livewire\Attributes\Validate;
@@ -18,11 +19,10 @@ class DocumentForm extends Form
     #[Validate('required|integer|min:1900|max:2099')]
     public $year = '';
 
-    #[Validate('nullable|file|mimes:pdf|max:10240')]
     public $file;
 
     #[Validate('required|in:active,inactive')]
-    public $status = 'active';
+    public $status = 'inactive';
 
     public function setDocument(Document $document)
     {
@@ -43,7 +43,6 @@ class DocumentForm extends Form
             'year.min' => 'Tahun minimal adalah 1900.',
             'year.max' => 'Tahun tidak boleh lebih dari 2099.',
             
-            'file.required' => 'Berkas dokumen wajib diunggah.',
             'file.file' => 'Format yang diunggah harus berupa berkas/file.',
             'file.mimes' => 'Hanya mendukung format berkas PDF.',
             'file.max' => 'Ukuran berkas maksimal adalah 10 MB.',
@@ -55,39 +54,64 @@ class DocumentForm extends Form
 
     public function store()
     {
-        $this->validate();
-
+        $this->validate(['file' => 'required|file|mimes:pdf|max:10240']);
         $path = $this->file->store('documents', 'public');
 
         $contentRaw = null;
         $pageCount = 0;
 
-        if ($this->file->getClientMimeType() === 'application/pdf') {
-             $parser = new Parser();
+        if ($this->file->getClientMimeType() === 'application/pdf' || $this->file->getClientOriginalExtension() === 'pdf') {
+            $parser = new Parser();
             $pdf = $parser->parseFile(storage_path('app/public/' . $path));
-                
-            $contentRaw = $pdf->getText();
-            $pageCount = count($pdf->getPages());
+            $pages = $pdf->getPages();
+            $pageCount = count($pages);
+
+            $fullText = '';
+            $isStarted = false;
+
+            foreach ($pages as $page) {
+                $pageText = $page->getText();
+
+                // 1. Titik Jangkar: Mulai ambil teks hanya jika menemukan kata MEMUTUSKAN/MENETAPKAN
+                if (!$isStarted && preg_match('/(MEMUTUSKAN|MENETAPKAN)\s*:/i', $pageText)) {
+                    $isStarted = true;
+                    $parts = preg_split('/(MEMUTUSKAN|MENETAPKAN)\s*:/i', $pageText);
+                    $pageText = $parts[1] ?? $pageText;
+                }
+
+                if ($isStarted) {
+                    // 2. Pembersihan dasar: karakter ilegal & spasi berlebih
+                    $pageText = str_replace(chr(0), '', $pageText);
+                    $fullText .= "\n" . trim($pageText);
+                }
+            }
+
+            // 3. Sanitasi: Gabungkan kalimat terputus, jaga struktur BAB/Pasal/List
+            // Ditambahkan [-•] agar list jadwal yang kamu buat tadi tidak berantakan
+            $contentRaw = preg_replace_callback('/\n(?!\s*(BAB|Pasal|\(\d+\)|[a-z]\.|[-•]))/i', function($matches) {
+                return ' ';
+            }, $fullText);
         }
 
-        Document::create([
+        $document = Document::create([
             'title' => $this->title,
             'year' => $this->year,
             'file_path' => $path,
-            'mime_type' => $this->file->getClientMimeType(),
+            'mime_type' => $this->file->getClientOriginalExtension(),
             'file_size' => $this->file->getSize(),
             'content_raw' => $contentRaw,
             'page_count' => $pageCount,
             'uploaded_by' => auth()->id(),
-            'status' => $this->status
+            'status' => 'processing'
         ]);
 
+        ProcessDocumentChunking::dispatch($document);
         $this->reset();
     }
 
     public function update()
     {
-        $this->validate();
+        $this->validate(['file' => 'required|file|mimes:pdf|max:10240']);
         
         $data = [
             'title' => $this->title,
@@ -95,22 +119,8 @@ class DocumentForm extends Form
             'status' => $this->status
         ];
 
-        if ($this->file) {
-            Storage::disk('public')->delete($this->document->file_path);
-            $data['file_path'] = $this->file->store('documents', 'public');
-            $data['mime_type'] = $this->file->getClientMimeType();
-            $data['file_size'] = $this->file->getSize();
-
-            if ($this->file->getClientMimeType() === 'application/pdf') {
-                $parser = new Parser();
-                $pdf = $parser->parseFile(storage_path('app/public/' . $data['file_path']));
-                
-                $data['content_raw'] = $pdf->getText();
-                $data['page_count'] = count($pdf->getPages());
-           }
-        }
-
         $this->document->update($data);
+
         $this->reset();
     }
 }

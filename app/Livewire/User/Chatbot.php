@@ -7,11 +7,13 @@ use App\Livewire\Forms\Chatbot\ChatSessionForm;
 use App\Models\ChatMessage;
 use App\Models\ChatSession;
 use App\Models\Document;
+use App\Models\DocumentChunk;
 use App\Services\OpenRouterService;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Pgvector\Laravel\Vector;
 
 use function Livewire\str;
 
@@ -71,6 +73,9 @@ class Chatbot extends Component
     {
         $this->validate([
             'prompt' => ['required', 'string', 'max:4000'],
+        ],[
+            'prompt.required' => 'Prompt wajib diisi.',
+            'prompt.max' => 'Prompt maksimal 4000 karakter.',
         ]);
 
         $userMessage = trim($this->prompt);
@@ -82,10 +87,7 @@ class Chatbot extends Component
                 'title' => Str::limit($userMessage, 30),
                 'slug' => str()->random(16),
             ]);
-
             $this->activeConversationId = $newSession->id;
-            $this->chatTitle = $newSession->title;
-            
             $this->js("window.history.replaceState({}, '', '/chatbot/{$newSession->slug}')");
         }
 
@@ -94,48 +96,86 @@ class Chatbot extends Component
             'sender' => 'user',
             'message' => $userMessage,
         ]);
-
         $this->messages[] = ['role' => 'user', 'content' => $userMessage];
 
+        
         $context = "";
         $docIds = [];
 
-        $keywords = ['apa', 'bagaimana', 'siapa', 'kapan', 'jelaskan', 'data', 'dokumen', 'berdasarkan'];
-        $isAskingData = Str::contains(Str::lower($userMessage), $keywords);
+        $queryVector = $aiService->embed($userMessage);
 
-        if ($isAskingData && strlen($userMessage) > 10) {
-            $relatedDocs = Document::where('status', 'active')
-                ->where('content_raw', 'LIKE', "%{$userMessage}%")
-                ->limit(2) 
+        if ($queryVector) {
+            $relatedChunks = DocumentChunk::with('document')
+                ->whereHas('document', function($q) {
+                    $q->where('status', 'active')->whereNull('deleted_at');
+                })
+                ->orderByRaw('embedding <=> ?', [new Vector($queryVector)])
+                ->limit(5)
                 ->get();
 
-            foreach ($relatedDocs as $doc) {
-                $context .= "Dokumen: {$doc->title} ({$doc->year})\nIsi: " . Str::limit($doc->content_raw, 1200) . "\n---\n";
-                $docIds[] = $doc->id;
+            $processedChunkIds = [];
+
+            foreach ($relatedChunks as $chunk) {
+                // Skip kalau chunk ini sudah terbawa sebagai "tetangga" dari chunk sebelumnya
+                if (in_array($chunk->id, $processedChunkIds)) continue;
+
+                // Ambil potongan sebelum dan sesudah dari DB
+                $neighbors = DocumentChunk::where('document_id', $chunk->document_id)
+                    ->whereIn('id', [$chunk->id - 1, $chunk->id + 1])
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                $pageInfo = $chunk->page_number ? " (Halaman: {$chunk->page_number})" : "";
+                $context .= "--- POTONGAN DOKUMEN ---\n";
+                $context .= "Judul: {$chunk->document->title}{$pageInfo}\n";
+                
+                // Gabungkan konten: Tetangga Sebelum + Chunk Utama + Tetangga Sesudah
+                $fullContent = "";
+                foreach ($neighbors as $neighbor) {
+                    if ($neighbor->id < $chunk->id) {
+                        $fullContent .= $neighbor->content . "\n";
+                        $processedChunkIds[] = $neighbor->id;
+                    }
+                }
+
+                $fullContent .= $chunk->content . "\n";
+                $processedChunkIds[] = $chunk->id;
+
+                foreach ($neighbors as $neighbor) {
+                    if ($neighbor->id > $chunk->id) {
+                        $fullContent .= $neighbor->content;
+                        $processedChunkIds[] = $neighbor->id;
+                    }
+                }
+
+                $context .= "Konten: " . trim($fullContent) . "\n";
+                $context .= "--- AKHIR POTONGAN ---\n\n";
+                
+                $docIds[] = $chunk->document_id;
             }
         }
 
-        $systemPrompt = "Anda adalah Lentera AI. Jawablah berdasarkan dokumen yang diberikan. 
-                WAJIB: Jika jawaban ada di dokumen, sebutkan nomor PASAL atau BAB-nya di akhir kalimat. 
-                Contoh: 'Pendaftaran dilakukan di gedung A (Pasal 4)'. 
-                Jika tidak ada informasi pasal, sebutkan saja judul dokumennya." . 
-            ($context 
-                ? "Gunakan data berikut untuk menjawab. Jika tidak ada di data, katakan sejujurnya: \n" . $context 
-                : "Jawablah dengan gaya bahasa yang chill namun sopan.");
+        $systemPrompt = "Anda adalah Lentera AI, asisten akademik yang cerdas, objektif, dan kritis. " .
+                        "Gaya bicara Anda santai (chill) namun tetap mendalam.\n\n" .
+                        "INSTRUKSI UTAMA:\n" .
+                        "1. Gunakan data dari DATA DOKUMEN di bawah untuk menjawab pertanyaan user.\n" .
+                        "2. Jika jawaban ada di dokumen, WAJIB sebutkan judul dokumennya.\n" .
+                        "3. Jika informasi tidak ditemukan di dokumen, katakan: 'Maaf, informasi tersebut tidak tersedia di basis data akademik saya saat ini.'\n" .
+                        "4. JANGAN mengarang jawaban (hallucination).\n\n" .
+                        "DATA DOKUMEN:\n" . ($context ?: "Tidak ada dokumen relevan yang ditemukan untuk pertanyaan ini.");
 
-        $aiResponse = $aiService->ask($systemPrompt, $userMessage);
+        $aiResponse = $aiService->ask($systemPrompt, $userMessage, $this->messages);
 
         $aiMsgRecord = ChatMessage::create([
             'session_id' => $this->activeConversationId,
             'sender' => 'ai',
             'message' => $aiResponse,
-            'doc_reference' => count($docIds) > 0 ? json_encode($docIds) : null,
+            'doc_reference' => count($docIds) > 0 ? json_encode(array_values(array_unique($docIds))) : null,
         ]);
 
         $this->messages[] = ['role' => 'assistant', 'content' => $aiResponse];
         
-        broadcast(new ChatMessageAdded($aiMsgRecord))->toOthers();
-        
+        broadcast(new ChatMessageAdded($aiMsgRecord));
         $this->dispatch('chat-message-added');
     }
 

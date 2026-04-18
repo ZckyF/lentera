@@ -51,57 +51,60 @@
 
                 <form wire:submit="{{ $isAdding ? 'store' : 'update' }}">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="{{ $isAdding ? 'col-md-4' : 'col-md-5' }}">
                             <label class="form-label small fw-bold text-muted">Judul Dokumen</label>
                             <input type="text" wire:model="form.title" class="form-control @error('form.title') is-invalid @enderror" @disabled($isViewing)>
                             @error('form.title') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="{{ $isAdding ? 'col-md-2' : 'col-md-4' }}">
                             <label class="form-label small fw-bold text-muted">Tahun</label>
                             <input type="number" wire:model="form.year" class="form-control @error('form.year') is-invalid @enderror" min="1900" max="2099" @disabled($isViewing)>
                             @error('form.year') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                         </div>
+                        @if(!$isAdding)
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Status</label>
+                            <select wire:model="form.status" class="form-select @error('form.status') is-invalid @enderror" @disabled($isViewing)>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                                @error('form.status') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+                            </div>
+                        @endif
                         
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">Status</label>
-                        <select wire:model="form.status" class="form-select @error('form.status') is-invalid @enderror" @disabled($isViewing)>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                            @error('form.status') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
-                        </div>
+                        @if($isAdding)
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">File Dokumen</label>
 
-                        <div class="col-md-5">
-                            <label class="form-label small fw-bold text-muted">File Dokumen</label>
-
-                            @if($isViewing && isset($form->document) && $form->document?->file_path)
-                                <div class="d-flex align-items-center gap-2">
-                                    <a href="{{ \Illuminate\Support\Facades\Storage::url($form->document->file_path) }}" target="_blank" class="btn btn-outline-info">
-                                        <i class="bi bi-box-arrow-up-right me-2"></i>Open File
-                                    </a>
-                                    <span class="text-muted small">{{ basename($form->document->file_path) }}</span>
-                                </div>
-                            @else
-                                <div
-                                    x-data="{ isUploading: false, progress: 0 }"
-                                    x-on:livewire-upload-start="isUploading = true"
-                                    x-on:livewire-upload-finish="isUploading = false; progress = 100"
-                                    x-on:livewire-upload-error="isUploading = false"
-                                    x-on:livewire-upload-progress="progress = $event.detail.progress"
-                                >
-                                    <input type="file" wire:model="form.file" class="form-control @error('form.file') is-invalid @enderror" accept=".pdf,.doc,.docx">
-                                    @error('form.file') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
-
-                                    <div class="progress mt-2" x-show="isUploading" style="height: 7px;">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" x-bind:style="`width: ${progress}%`"></div>
+                                @if($isViewing && isset($form->document) && $form->document?->file_path)
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="{{ \Illuminate\Support\Facades\Storage::url($form->document->file_path) }}" target="_blank" class="btn btn-outline-info">
+                                            <i class="bi bi-box-arrow-up-right me-2"></i>Open File
+                                        </a>
+                                        <span class="text-muted small">{{ basename($form->document->file_path) }}</span>
                                     </div>
-                                    <div class="small text-muted mt-1" x-show="isUploading">
-                                        Uploading... <span x-text="progress"></span>%
+                                @else
+                                    <div
+                                        x-data="{ isUploading: false, progress: 0 }"
+                                        x-on:livewire-upload-start="isUploading = true"
+                                        x-on:livewire-upload-finish="isUploading = false; progress = 100"
+                                        x-on:livewire-upload-error="isUploading = false"
+                                        x-on:livewire-upload-progress="progress = $event.detail.progress"
+                                    >
+                                        <input type="file" wire:model="form.file" class="form-control @error('form.file') is-invalid @enderror" accept=".pdf">
+                                        @error('form.file') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
+
+                                        <div class="progress mt-2" x-show="isUploading" style="height: 7px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" x-bind:style="`width: ${progress}%`"></div>
+                                        </div>
+                                        <div class="small text-muted mt-1" x-show="isUploading">
+                                            Uploading... <span x-text="progress"></span>%
+                                        </div>
                                     </div>
-                                </div>
-                            @endif
-                        </div>
+                                @endif
+                            </div>
+                        @endif
 
                         <div class="col-12 d-flex justify-content-end gap-2 mt-3">
                             <button type="button" wire:click="cancel" class="btn btn-light border px-4">
@@ -141,7 +144,6 @@
                             $mime = strtolower((string) $document->mime_type);
                             $extension = strtolower(pathinfo((string) $document->file_path, PATHINFO_EXTENSION));
                             $isPdf = str_contains($mime, 'pdf') || $extension === 'pdf';
-                            $isWord = str_contains($mime, 'word') || in_array($extension, ['doc', 'docx'], true);
                             $iconClass = $isPdf ? 'bi-file-earmark-pdf text-danger' : ($isWord ? 'bi-file-earmark-word text-primary' : 'bi-file-earmark');
                         @endphp
                         <tr wire:key="{{ $document->id }}">
@@ -161,7 +163,8 @@
                                 @php
                                     $statusBadge = [
                                         'active' => 'bg-success',
-                                        'inactive' => 'bg-danger'
+                                        'inactive' => 'bg-danger',
+                                        'processing' => 'bg-warning'
                                     ][$document->status];
                                 @endphp
                                 <span class="badge {{ $statusBadge }} rounded-pill" style="font-size: 0.7rem;">
@@ -190,7 +193,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted small italic">Dokumen tidak ditemukan.</td>
+                            <td colspan="7" class="text-center py-5 text-muted small italic">Dokumen tidak ditemukan.</td>
                         </tr>
                     @endforelse
                 </tbody>
