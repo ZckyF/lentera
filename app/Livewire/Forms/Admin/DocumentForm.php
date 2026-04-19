@@ -4,10 +4,11 @@ namespace App\Livewire\Forms\Admin;
 
 use App\Jobs\ProcessDocumentChunking;
 use App\Models\Document;
+use Illuminate\Support\Facades\Log;
 use Livewire\Form;
 use Livewire\Attributes\Validate;
-use Illuminate\Support\Facades\Storage;
-use Smalot\PdfParser\Parser;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class DocumentForm extends Form
 {
@@ -56,51 +57,42 @@ class DocumentForm extends Form
     {
         $this->validate(['file' => 'required|file|mimes:pdf|max:10240']);
         $path = $this->file->store('documents', 'public');
+        $pythonPath = base_path('python_app' . DIRECTORY_SEPARATOR . 'Scripts' . DIRECTORY_SEPARATOR . 'python.exe');
+        $scriptPath = base_path('python_app' . DIRECTORY_SEPARATOR . 'parser.py');
 
-        $contentRaw = null;
-        $pageCount = 0;
+        $absolutePath = realpath(storage_path('app/public/' . $path));
 
-        if ($this->file->getClientMimeType() === 'application/pdf' || $this->file->getClientOriginalExtension() === 'pdf') {
-            $parser = new Parser();
-            $pdf = $parser->parseFile(storage_path('app/public/' . $path));
-            $pages = $pdf->getPages();
-            $pageCount = count($pages);
-
-            $fullText = '';
-            $isStarted = false;
-
-            foreach ($pages as $page) {
-                $pageText = $page->getText();
-
-                // 1. Titik Jangkar: Mulai ambil teks hanya jika menemukan kata MEMUTUSKAN/MENETAPKAN
-                if (!$isStarted && preg_match('/(MEMUTUSKAN|MENETAPKAN)\s*:/i', $pageText)) {
-                    $isStarted = true;
-                    $parts = preg_split('/(MEMUTUSKAN|MENETAPKAN)\s*:/i', $pageText);
-                    $pageText = $parts[1] ?? $pageText;
-                }
-
-                if ($isStarted) {
-                    // 2. Pembersihan dasar: karakter ilegal & spasi berlebih
-                    $pageText = str_replace(chr(0), '', $pageText);
-                    $fullText .= "\n" . trim($pageText);
-                }
+        $process = new Process([
+            $pythonPath, 
+            $scriptPath, 
+            $absolutePath
+        ], null, [
+            'GEMINI_API_KEY' => config('services.gemini.key'),
+        ]);
+        $process->setTimeout(300); 
+        
+        try {
+            $process->run();
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
             }
+            $contentRaw = $process->getOutput();
 
-            // 3. Sanitasi: Gabungkan kalimat terputus, jaga struktur BAB/Pasal/List
-            // Ditambahkan [-•] agar list jadwal yang kamu buat tadi tidak berantakan
-            $contentRaw = preg_replace_callback('/\n(?!\s*(BAB|Pasal|\(\d+\)|[a-z]\.|[-•]))/i', function($matches) {
-                return ' ';
-            }, $fullText);
+        } catch (\Exception $e) {
+            Log::error("Parser Error: " . $e->getMessage());
+            return session()->flash('error', 'Gagal memproses dokumen.');
         }
+
+        dd($contentRaw);
 
         $document = Document::create([
             'title' => $this->title,
             'year' => $this->year,
             'file_path' => $path,
-            'mime_type' => $this->file->getClientOriginalExtension(),
+            'mime_type' => 'pdf',
             'file_size' => $this->file->getSize(),
-            'content_raw' => $contentRaw,
-            'page_count' => $pageCount,
+            'content_raw' => trim($contentRaw),
+            'page_count' => 0, 
             'uploaded_by' => auth()->id(),
             'status' => 'processing'
         ]);
