@@ -49,6 +49,19 @@
                     @endif
                 </h6>
 
+                @if($isAdding)
+                    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center p-3 mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                        <div>
+                            <div class="fw-bold text-uppercase" style="font-size: 0.8rem;">Penting: Struktur Dokumen Legal</div>
+                            <span class="small">
+                                Pastikan PDF memiliki format struktur yang jelas (**BAB, Pasal, dan Ayat**). 
+                                Lentera AI butuh struktur ini untuk proses <i>chunking</i> agar mahasiswa bisa tanya pasal spesifik dengan akurat.
+                            </span>
+                        </div>
+                    </div>
+                @endif
+
                 <form wire:submit="{{ $isAdding ? 'store' : 'update' }}">
                     <div class="row g-3">
                         <div class="{{ $isAdding ? 'col-md-4' : 'col-md-5' }}">
@@ -163,7 +176,8 @@
                                 @php
                                     $statusBadge = [
                                         'active' => 'bg-success',
-                                        'inactive' => 'bg-danger',
+                                        'inactive' => '.bg-danger-subtle',
+                                        'failed' => 'bg-danger',
                                         'processing' => 'bg-warning'
                                     ][$document->status];
                                 @endphp

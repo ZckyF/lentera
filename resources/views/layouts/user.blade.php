@@ -7,6 +7,11 @@
     <link rel="icon" href="{{ asset('storage/favicon.ico') }}">
     
     <title>{{ $title ?? 'Lentera AI' }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" 
+        onload="renderMathInElement(document.body);">
+    </script>
 
     <script>
         (function() {

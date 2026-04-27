@@ -105,13 +105,28 @@ class Chatbot extends Component
         $queryVector = $aiService->embed($userMessage);
 
         if ($queryVector) {
-            $relatedChunks = DocumentChunk::with('document')
+            $vectorChunks = DocumentChunk::with('document')
                 ->whereHas('document', function($q) {
                     $q->where('status', 'active')->whereNull('deleted_at');
                 })
                 ->orderByRaw('embedding <=> ?', [new Vector($queryVector)])
-                ->limit(5)
+                ->limit(15)
                 ->get();
+
+                if (preg_match('/Pasal\s+(\d+)/i', $userMessage, $matches)) {
+                        $keyword = $matches[0];
+                        $keywordChunks = DocumentChunk::with('document')
+                            ->whereHas('document', function($q) {
+                                $q->where('status', 'active')->whereNull('deleted_at');
+                            })
+                            ->where('content', 'ILIKE', "%{$keyword}%")
+                            ->limit(5)
+                            ->get();
+                            
+                        $relatedChunks = $vectorChunks->merge($keywordChunks)->unique('id');
+                    } else {
+                        $relatedChunks = $vectorChunks;
+                    }
 
             $processedChunkIds = [];
 
@@ -161,7 +176,10 @@ class Chatbot extends Component
                         "1. Gunakan data dari DATA DOKUMEN di bawah untuk menjawab pertanyaan user.\n" .
                         "2. Jika jawaban ada di dokumen, WAJIB sebutkan judul dokumennya.\n" .
                         "3. Jika informasi tidak ditemukan di dokumen, katakan: 'Maaf, informasi tersebut tidak tersedia di basis data akademik saya saat ini.'\n" .
-                        "4. JANGAN mengarang jawaban (hallucination).\n\n" .
+                        "4. JANGAN mengarang jawaban (hallucination).\n" .
+                        "5. WAJIB menjawab dalam Bahasa Indonesia, meskipun user bertanya dalam bahasa asing.\n" .
+                        "6. Jika terdapat tabel dalam dokumen, JANGAN tampilkan dalam bentuk tabel markdown. Ubah menjadi daftar poin (bullet list) yang rapi dan terstruktur.\n" .
+                        "7. Jika terdapat rumus atau LaTeX, ubah menjadi penjelasan teks biasa yang mudah dipahami. Jangan tampilkan simbol LaTeX mentah.\n" .
                         "DATA DOKUMEN:\n" . ($context ?: "Tidak ada dokumen relevan yang ditemukan untuk pertanyaan ini.");
 
         $aiResponse = $aiService->ask($systemPrompt, $userMessage, $this->messages);

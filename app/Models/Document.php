@@ -42,4 +42,9 @@ class Document extends Model
     {
         return $this->hasMany(DocumentChunk::class, 'document_id');
     }
+
+    public function pages(): HasMany
+    {
+        return $this->hasMany(DocumentPage::class);
+    }
 }

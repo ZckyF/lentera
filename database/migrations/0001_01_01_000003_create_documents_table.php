@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('page_count');
             $table->integer('file_size');
             $table->longText('content_raw')->nullable();
-            $table->enum('status',['active', 'inactive','processing'])->default('active');
+            $table->enum('status',['active', 'inactive','processing','failed'])->default('active');
             $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();

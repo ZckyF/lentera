@@ -27,105 +27,113 @@ class ProcessDocumentChunking implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->document->update(['status' => 'processing']);
         $text = $this->document->content_raw;
 
         if (empty($text)) {
-            $this->document->update(['status' => 'active']);
+            Log::info("Document {$this->document->id} is empty.");
+            $this->document->update(['status' => 'failed']);
             return;
         }
 
-        // Cleaning spasi dan baris kosong berlebih
-        $text = preg_replace('/(?<!\n)(BAB\s+[IVXLC]+|Pasal\s+\d+)/i', "\n$1", $text);
-        $lines = explode("\n", $text);
-
-        $currentBab = 'KETENTUAN UMUM';
-        $currentChunk = '';
-        $chunksRaw = [];
-
-        // STEP 1: Parsing Struktur (Bab -> Pasal)
-        foreach ($lines as $index => $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            // Deteksi BAB & Ambil Judulnya
-            if (preg_match('/^BAB\s+([IVXLC]+)(.*)/i', $line, $matches)) {
-                // Amankan chunk sebelumnya jika ada isi yang tertinggal
-                if (!empty($currentChunk)) {
-                    $chunksRaw[] = trim($currentChunk);
-                    $currentChunk = '';
-                }
-
-                $nomorRomawi = trim($matches[1]);
-                $sisaTeks = trim($matches[2]);
-
-                // Jika judul BAB ada di baris berikutnya
-                if (empty($sisaTeks) && isset($lines[$index + 1])) {
-                    $next = trim($lines[$index + 1]);
-                    if (!preg_match('/^Pasal/i', $next)) {
-                        $sisaTeks = $next;
-                    }
-                }
-
-                $currentBab = "BAB {$nomorRomawi}" . ($sisaTeks ? ": {$sisaTeks}" : "");
-                continue;
-            }
-
-            if (preg_match('/^Pasal\s+\d+/i', $line)) {
-                if (!empty($currentChunk)) {
-                    $chunksRaw[] = trim($currentChunk);
-                }
-                
-                // Injeksi Konteks: Sekarang $currentBab sudah terupdate sebelum Pasal diproses
-                $currentChunk = "[Konteks: {$currentBab}]\n" . $line;
-            } else {
-                // Gabungkan isi ayat ke dalam chunk pasal yang aktif
-                if (!empty($currentChunk)) {
-                    $currentChunk .= "\n" . $line;
-                }
-            }
-        }
-        
-        if (!empty($currentChunk)) $chunksRaw[] = $currentChunk;
-
-        // STEP 2: Embedding & Mass Insert
         $aiService = new OpenRouterService();
+
+        /**
+         * REGEX SAPU JAGAT
+         * Memotong berdasarkan:
+         * 1. ## BAB ...
+         * 2. ### Pasal ...
+         * 3. Kata kunci formal: MEMUTUSKAN, MENETAPKAN, MENIMBANG (untuk dokumen tak resmi/awal)
+         * 4. Double Newline + Heading (Untuk dokumen umum/acak)
+         */
+        // Tambahkan 'Bagian' ke pattern jika dokumenmu pakai Bagian Kesatu, dsb.
+        $pattern = '/(?=^##\s+BAB)|(?=^###\s+Pasal)|(?=^###\s+Bagian)|(?=^Ditetapkan\s+di)|(?=^Bagian\s+Ke)|(?=^MEMUTUSKAN)|(?=^Menetapkan)|(?=^Menimbang)(?=^Mengingat)/mi';
+        
+        // Pakai PREG_SPLIT_DELIM_CAPTURE agar header BAB/Pasal tidak hilang saat dipotong
+        $chunksRaw = preg_split($pattern, $text, -1, PREG_SPLIT_NO_EMPTY);
+
         $chunksToSave = [];
         $order = 1;
+        $currentBab = 'KETENTUAN UMUM'; // Default context
 
         try {
-            foreach ($chunksRaw as $chunkContent) {
-                if (strlen(trim($chunkContent)) < 50) continue;
+            $aiService = new OpenRouterService();
 
-                $vector = null;
-                for ($retry = 0; $retry < 3; $retry++) {
-                    $vector = $aiService->embed($chunkContent);
-                    if ($vector) break;
-                    sleep(pow(2, $retry));
+            foreach ($chunksRaw as $chunkContent) {
+                $chunkContent = trim($chunkContent);
+                if (strlen($chunkContent) < 20) continue;
+
+                // 1. Update Context BAB
+                if (str_starts_with($chunkContent, '## BAB')) {
+                    $lines = explode("\n", $chunkContent);
+                    $currentBab = trim($lines[0]); 
+                    
+                    // Jika cuma judul BAB tanpa isi, jangan simpan sebagai chunk mandiri
+                    if (count($lines) <= 1) continue; 
                 }
 
-                if (!$vector) throw new \Exception("Embedding gagal di chunk {$order}");
+                if (str_contains($chunkContent, 'Ditetapkan di')) {
+                    $currentBab = null; 
+                }
+                
+                // 2. Siapkan Header Konteks (KTP Dokumen)
+                $documentTitle = $this->document->title;
+                $header = "[DOKUMEN: {$documentTitle} {$this->document->year}]\n";
 
-                $chunksToSave[] = [
-                    'document_id' => $this->document->id,
-                    'content'     => $chunkContent,
-                    'chunk_order' => $order++,
-                    'embedding'   => new \Pgvector\Laravel\Vector($vector),
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
-                ];
+                // // Tambahkan BAB jika belum ada di dalam teks
+                if (!str_contains($chunkContent, $currentBab)) {
+                    $header .= "{$currentBab}\n";
+                }
+
+                // GABUNGKAN: Header + Isi Asli
+                $fullContent = $header . $chunkContent;
+
+                // 3. Logika Simpan (Normal vs Fallback)
+                if (!str_contains($chunkContent, 'Pasal') && strlen($fullContent) > 3000) {
+                    $subChunks = explode("\n\n", $chunkContent); // Split isi aslinya saja
+                    foreach ($subChunks as $sub) {
+                        $sub = trim($sub);
+                        if (strlen($sub) < 20) continue;
+
+                        $finalText = $header . $sub;
+
+                        $vector = $aiService->embed($finalText);
+                        // Tiap potongan paragraf tetap ditempeli header yang sama
+                        $chunksToSave[] = $this->formatChunk($header . $sub, $order++, $vector);
+                    }
+                } else {
+                    $vector = $aiService->embed($fullContent);
+                    $chunksToSave[] = $this->formatChunk($fullContent, $order++, $vector);
+                }
             }
 
             DB::transaction(function () use ($chunksToSave) {
                 $this->document->chunks()->delete();
-                // Mass insert untuk performa maksimal
-                DocumentChunk::insert($chunksToSave);
+
+                foreach ($chunksToSave as $chunk) {
+                    DocumentChunk::create($chunk);
+                }
             });
 
             $this->document->update(['status' => 'active']);
+
         } catch (\Exception $e) {
-            Log::error("Gagal proses dokumen {$this->document->id}: " . $e->getMessage());
+            Log::error("Gagal chunking Dokumen {$this->document->id}: " . $e->getMessage());
             $this->document->update(['status' => 'failed']);
         }
+    }
+
+    /**
+     * Helper for formatting data before saving
+     */
+    private function formatChunk($content, $order, $vector = null)
+    {
+        return [
+            'document_id' => $this->document->id,
+            'content'     => $content,
+            'chunk_order' => $order,
+            'embedding'   => new Vector($vector),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ];
     }
 }

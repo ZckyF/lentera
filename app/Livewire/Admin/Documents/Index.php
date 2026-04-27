@@ -37,7 +37,6 @@ class Index extends Component
     {
         $this->form->store();
         $this->isAdding = false;
-        session()->flash('message', 'Dokumen berhasil diunggah.');
     }
 
     public function edit(Document $document)

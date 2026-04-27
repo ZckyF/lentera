@@ -59,6 +59,35 @@
             color: var(--bs-body-color);
         }
 
+        .ai-content ul {
+            list-style: disc !important;
+            padding-left: 1.5rem !important;
+        }
+
+        .ai-content ol {
+            list-style: decimal !important;
+            padding-left: 1.5rem !important;
+        }
+
+        /* Tambahkan ini di file CSS kamu */
+        .ai-content table {
+            width: 100%;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+        }
+
+        .ai-content th, .ai-content td {
+            padding: 0.75rem;
+            border: 1px solid #dee2e6; /* Ini yang memunculkan garis kotak */
+            text-align: center;
+        }
+
+        .ai-content thead {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
         .chat-message-list {
             flex: 1;
             overflow-y: auto;
@@ -213,22 +242,25 @@
                                     {{ $message['content'] }}
                                 </div>
                             </div>
-                        @else
-                            <div class="d-flex justify-content-start mb-5">
-                                <div class="ai-container d-flex gap-3 w-100">
-                                    <div class="flex-shrink-0">
-                                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-circle p-2">
-                                            <i class="bi bi-robot"></i>
-                                        </span>
-                                    </div>
-                                    <div class="ai-content flex-grow-1">
-                                        <div class="text-body lh-lg">
-                                            {{ $message['content'] }}
+                            @else
+                                <div class="d-flex justify-content-start mb-5">
+                                    <div class="ai-container d-flex gap-3 w-100">
+                                        <div class="flex-shrink-0">
+                                            <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-circle p-2">
+                                                <i class="bi bi-robot"></i>
+                                            </span>
+                                        </div>
+                                        <div class="ai-content flex-grow-1">
+                                            <div class="text-body lh-lg">
+                                                <x-markdown>
+                                                    {{-- Kita ganti \n menjadi dua kali enter agar tabelnya terpisah dari paragraf --}}
+                                                    {!! nl2br(e($message['content'])) !!}
+                                                </x-markdown>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
                     @empty
                         <div class="h-100 d-flex align-items-center justify-content-center text-muted">
                             Belum ada pesan. Mulai percakapan baru.

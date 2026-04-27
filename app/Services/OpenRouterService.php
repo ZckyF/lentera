@@ -42,7 +42,7 @@ class OpenRouterService
                 'model'       => config('services.openrouter.model', 'google/gemini-2.0-flash-lite-001'),
                 'messages'    => $messages,
                 'max_tokens'  => 2000,
-                'temperature' => 0.3,
+                'temperature' => 0.5,
             ]);
 
             if ($response->successful()) {

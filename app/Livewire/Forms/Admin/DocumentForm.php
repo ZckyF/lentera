@@ -3,10 +3,12 @@
 namespace App\Livewire\Forms\Admin;
 
 use App\Jobs\ProcessDocumentChunking;
+use App\Jobs\ProcessPdfParser;
 use App\Models\Document;
 use Illuminate\Support\Facades\Log;
 use Livewire\Form;
 use Livewire\Attributes\Validate;
+use Smalot\PdfParser\Parser;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -56,34 +58,13 @@ class DocumentForm extends Form
     public function store()
     {
         $this->validate(['file' => 'required|file|mimes:pdf|max:10240']);
+
         $path = $this->file->store('documents', 'public');
-        $pythonPath = base_path('python_app' . DIRECTORY_SEPARATOR . 'Scripts' . DIRECTORY_SEPARATOR . 'python.exe');
-        $scriptPath = base_path('python_app' . DIRECTORY_SEPARATOR . 'parser.py');
+        $fullPath = storage_path('app/public/' . $path);
 
-        $absolutePath = realpath(storage_path('app/public/' . $path));
-
-        $process = new Process([
-            $pythonPath, 
-            $scriptPath, 
-            $absolutePath
-        ], null, [
-            'GEMINI_API_KEY' => config('services.gemini.key'),
-        ]);
-        $process->setTimeout(300); 
-        
-        try {
-            $process->run();
-            if (!$process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-            $contentRaw = $process->getOutput();
-
-        } catch (\Exception $e) {
-            Log::error("Parser Error: " . $e->getMessage());
-            return session()->flash('error', 'Gagal memproses dokumen.');
-        }
-
-        dd($contentRaw);
+        $parser = new Parser();
+        $pdf = $parser->parseFile($fullPath);
+        $pageCount = count($pdf->getPages());
 
         $document = Document::create([
             'title' => $this->title,
@@ -91,14 +72,15 @@ class DocumentForm extends Form
             'file_path' => $path,
             'mime_type' => 'pdf',
             'file_size' => $this->file->getSize(),
-            'content_raw' => trim($contentRaw),
-            'page_count' => 0, 
             'uploaded_by' => auth()->id(),
+            'page_count' => $pageCount,
             'status' => 'processing'
         ]);
 
-        ProcessDocumentChunking::dispatch($document);
+        ProcessPdfParser::dispatch($document);
+
         $this->reset();
+        session()->flash('message', 'Dokumen sedang diproses.');
     }
 
     public function update()
