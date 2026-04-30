@@ -65,6 +65,10 @@ class ProcessPageVision implements ShouldQueue
 
             if ($response->successful()) {
                 $markdown = $response->json('choices.0.message.content');
+
+                Log::info("Vision Success Page {$this->pageNumber}", [
+                    'markdown' => $markdown
+                ]);
                 
                 $this->document->pages()->updateOrCreate(
                     ['page_number' => $this->pageNumber],

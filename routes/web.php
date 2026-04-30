@@ -1,10 +1,9 @@
 <?php
 
-use App\Livewire\Auth\Activate;
 use App\Livewire\Auth\Login;
-use App\Livewire\Admin\Documents\Index as AdminDocumentsIndex;
-use App\Livewire\Admin\Users\Index as AdminUsersIndex;
-use App\Livewire\Admin\Dashboard\Index as DashboardIndex;
+use App\Livewire\Admin\Document as AdminDocument;
+use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Admin\User as AdminUser;
 use App\Livewire\Settings\Profile;
 use App\Livewire\User\Chatbot;
 use Illuminate\Http\Request;
@@ -21,9 +20,9 @@ Route::middleware(['auth', 'ensure.active'])->group(function () {
     Route::get('/settings/profile', Profile::class)->name('settings.profile');
     
     Route::middleware(['is.role:admin'])->group(function () {
-        Route::get('/dashboard', DashboardIndex::class)->name('admin.dashboard');
-        Route::get('/admin/pengguna', AdminUsersIndex::class)->name('admin.users');
-        Route::get('/admin/dokumen', AdminDocumentsIndex::class)->name('admin.documents');
+        Route::get('/dashboard', AdminDashboard::class)->name('admin.dashboard');
+        Route::get('/admin/pengguna', AdminUser::class)->name('admin.users');
+        Route::get('/admin/dokumen', AdminDocument::class)->name('admin.documents');
     });
 
     Route::middleware(['is.role:mahasiswa,dosen,staff'])->group(function () {

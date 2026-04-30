@@ -56,7 +56,7 @@
                             <div class="fw-bold text-uppercase" style="font-size: 0.8rem;">Penting: Struktur Dokumen Legal</div>
                             <span class="small">
                                 Pastikan PDF memiliki format struktur yang jelas (**BAB, Pasal, dan Ayat**). 
-                                Lentera AI butuh struktur ini untuk proses <i>chunking</i> agar mahasiswa bisa tanya pasal spesifik dengan akurat.
+                                Lentera AI butuh struktur ini untuk proses <i>chunking</i> agar mahasiswa bisa tanya pasal spesifik dengan akurat. Untuk contoh struktur PDF, silahkan lihat dokumen peraturan akademik polnes 2024.
                             </span>
                         </div>
                     </div>

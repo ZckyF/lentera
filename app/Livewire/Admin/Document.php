@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Livewire\Admin\Documents;
+namespace App\Livewire\Admin;
 
-use App\Models\Document;
+use App\Models\Document as DocumentModel;
 use App\Livewire\Forms\Admin\DocumentForm;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
 #[Title('Dokumen')]
-class Index extends Component
+class Document extends Component
 {
     use WithPagination, WithFileUploads;
 
@@ -39,7 +39,7 @@ class Index extends Component
         $this->isAdding = false;
     }
 
-    public function edit(Document $document)
+    public function edit(DocumentModel $document)
     {
         $this->cancel();
         $this->form->setDocument($document);
@@ -56,7 +56,7 @@ class Index extends Component
     public function view($id)
     {
         $this->cancel();
-        $doc = Document::withTrashed()->findOrFail($id);
+        $doc = DocumentModel::withTrashed()->findOrFail($id);
         $this->form->setDocument($doc);
         $this->isViewing = true;
     }
@@ -69,7 +69,7 @@ class Index extends Component
 
     public function delete()
     {
-        Document::findOrFail($this->docIdBeingDeleted)->delete();
+        DocumentModel::findOrFail($this->docIdBeingDeleted)->delete();
         $this->docIdBeingDeleted = null;
         $this->dispatch('hide-delete-modal');
         session()->flash('message', 'Dokumen dipindahkan ke arsip.');
@@ -83,7 +83,7 @@ class Index extends Component
 
     public function restore()
     {
-        Document::withTrashed()->findOrFail($this->docIdBeingRestored)->restore();
+        DocumentModel::withTrashed()->findOrFail($this->docIdBeingRestored)->restore();
         $this->docIdBeingRestored = null;
         $this->dispatch('hide-restore-modal');
         session()->flash('message', 'Dokumen berhasil dipulihkan.');
@@ -110,10 +110,10 @@ class Index extends Component
     public function render()
     {
         $query = $this->showHistory 
-            ? Document::onlyTrashed() 
-            : Document::query();
+            ? DocumentModel::onlyTrashed() 
+            : DocumentModel::query();
 
-        return view('livewire.admin.documents.index', [
+        return view('livewire.admin.document', [
             'documents' => $query->latest()->paginate(10)
         ]);
     }

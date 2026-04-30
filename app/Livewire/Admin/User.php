@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Livewire\Admin\Users;
+namespace App\Livewire\Admin;
 
 use App\Livewire\Forms\Admin\UserForm;
-use App\Models\User;
+use App\Models\User as UserModel;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -11,7 +11,7 @@ use Livewire\WithPagination;
 
 #[Layout('layouts.admin')]
 #[Title('Pengguna')]
-class Index extends Component
+class User extends Component
 {
     use WithPagination;
 
@@ -29,7 +29,7 @@ class Index extends Component
     public function view($id)
     {
         $this->cancel();
-        $user = User::withTrashed()->findOrFail($id);
+        $user = UserModel::withTrashed()->findOrFail($id);
         
         $this->form->setUser($user);
         $this->isViewing = true;
@@ -59,7 +59,7 @@ class Index extends Component
     public function restore()
     {
         if ($this->userIdBeingRestored) {
-            $user = User::withTrashed()->findOrFail($this->userIdBeingRestored);
+            $user = UserModel::withTrashed()->findOrFail($this->userIdBeingRestored);
             $user->restore();
             $this->userIdBeingRestored = null;
             $this->dispatch('hide-restore-modal');   
@@ -67,7 +67,7 @@ class Index extends Component
         }
     }
 
-    public function edit(User $user)
+    public function edit(UserModel $user)
     {
         $this->cancel();
         $this->form->setUser($user);
@@ -93,7 +93,7 @@ class Index extends Component
     public function delete()
     {
         if ($this->userIdBeingDeleted) {
-            $user = User::findOrFail($this->userIdBeingDeleted);
+            $user = UserModel::findOrFail($this->userIdBeingDeleted);
             $user->delete();
 
             $this->userIdBeingDeleted = null;
@@ -121,12 +121,12 @@ class Index extends Component
     public function render()
     {
         $query = $this->showHistory 
-        ? User::onlyTrashed() 
-        : User::query();
+        ? UserModel::onlyTrashed() 
+        : UserModel::query();
 
         $users = $query->where('id','!=',auth()->user()->id)->latest()->paginate(10);
 
-        return view('livewire.admin.users.index',[
+        return view('livewire.admin.user',[
             'users' => $users
         ]);
     }

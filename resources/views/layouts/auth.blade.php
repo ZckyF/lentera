@@ -26,7 +26,7 @@
                             style="max-height: 100px; width: auto;"
                         >
                         <p class="px-4" style="font-size: 0.9rem; line-height: 1.4;">
-                            <strong class="text-primary">LENTERA:</strong> Layanan Terpadu Referensi Akademik berbasis AI untuk Mahasiswa Politeknik Negeri Samarinda.
+                            <strong class="text-primary">LENTERA:</strong> Layanan Terpadu Referensi Aturan Akademik berbasis AI untuk navigasi regulasi dan kebijakan bagi seluruh civitas akademika Politeknik Negeri Samarinda.
                         </p>
                     </div>
                     <div class="card-body p-4 p-md-5">

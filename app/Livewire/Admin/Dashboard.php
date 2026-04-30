@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Admin\Dashboard;
+namespace App\Livewire\Admin;
 
 use App\Models\Document;
 use App\Models\User;
@@ -10,7 +10,7 @@ use Livewire\Component;
 
 #[Layout('layouts.admin')]
 #[Title('Dashboard')]
-class Index extends Component
+class Dashboard extends Component
 {
     public function render()
     {
@@ -23,7 +23,7 @@ class Index extends Component
             ->groupBy('year')
             ->get();
         
-        return view('livewire.admin.dashboard.index',[
+        return view('livewire.admin.dashboard',[
             'totalUsers' => User::count(),
             'totalDocuments' => Document::count(),
             'days' => $days->map(fn($d) => date('d M', strtotime($d))),

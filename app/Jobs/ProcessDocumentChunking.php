@@ -75,7 +75,7 @@ class ProcessDocumentChunking implements ShouldQueue
                     $currentBab = null; 
                 }
                 
-                // 2. Siapkan Header Konteks (KTP Dokumen)
+                // 2. Siapkan Header Konteks
                 $documentTitle = $this->document->title;
                 $header = "[DOKUMEN: {$documentTitle} {$this->document->year}]\n";
 
