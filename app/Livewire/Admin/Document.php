@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\Document as DocumentModel;
 use App\Livewire\Forms\Admin\DocumentForm;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
@@ -94,6 +95,22 @@ class Document extends Component
         $this->showHistory = !$this->showHistory;
         $this->cancel();
         $this->resetPage();
+    }
+
+    public function download(string $id)
+    {
+        $document = DocumentModel::findOrFail($id);
+
+        // Pastikan file benar-benar ada di storage
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            session()->flash('error', 'File tidak ditemukan di server.');
+            return;
+        }
+
+        // Mengambil nama file asli atau menggunakan judul dokumen sebagai nama file download
+        $fileName = $document->title . '.pdf'; 
+
+        return Storage::disk('public')->download($document->file_path, $fileName);
     }
 
     public function cancel()

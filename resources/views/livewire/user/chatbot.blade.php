@@ -253,7 +253,6 @@
                                         <div class="ai-content flex-grow-1">
                                             <div class="text-body lh-lg">
                                                 <x-markdown>
-                                                    {{-- Kita ganti \n menjadi dua kali enter agar tabelnya terpisah dari paragraf --}}
                                                     {!! nl2br(e($message['content'])) !!}
                                                 </x-markdown>
                                             </div>

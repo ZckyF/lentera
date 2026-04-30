@@ -191,12 +191,20 @@
                                         <i class="bi bi-eye-fill"></i>
                                     </button>
 
+                                    <button wire:click="download({{ $document->id }})" class="btn btn-sm btn-outline-secondary border-0" title="Download">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+
                                     <button wire:click="confirmRestore({{ $document->id }})" class="btn btn-sm btn-outline-success border-0" title="Pulihkan">
                                         <i class="bi bi-arrow-counterclockwise"></i>
                                     </button>
                                 @else
                                     <button wire:click="edit({{ $document->id }})" class="btn btn-sm btn-outline-primary border-0">
                                         <i class="bi bi-pencil-square"></i>
+                                    </button>
+
+                                    <button wire:click="download({{ $document->id }})" class="btn btn-sm btn-outline-secondary border-0" title="Download">
+                                        <i class="bi bi-download"></i>
                                     </button>
 
                                     <button wire:click="confirmDelete({{ $document->id }})" class="btn btn-sm btn-outline-danger border-0">
