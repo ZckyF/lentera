@@ -44,13 +44,13 @@
             
             <form wire:submit="{{ $isAdding ? 'store' : 'update' }}">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="{{$isAdding ? 'col-md-4' : 'col-md-3'}}">
                         <label class="form-label small fw-bold text-muted">Identifier (NIM/NIP)</label>
                         <input type="text" wire:model="form.identifier" class="form-control @error('form.identifier') is-invalid @enderror" @disabled($isViewing)>
                         @error('form.identifier') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="{{$isAdding ? 'col-md-4' : 'col-md-3'}}">
                         <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
                         <input type="text" wire:model="form.name" class="form-control @error('form.name') is-invalid @enderror" @disabled($isViewing)>
                         @error('form.name') <div class="invalid-feedback text-xs">{{ $message }}</div> @enderror

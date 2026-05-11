@@ -193,7 +193,7 @@ class Chatbot extends Component
 
         $this->messages[] = ['role' => 'assistant', 'content' => $aiResponse];
         
-        broadcast(new ChatMessageAdded($aiMsgRecord));
+        // broadcast(new ChatMessageAdded($aiMsgRecord));
         $this->dispatch('chat-message-added');
     }
 
